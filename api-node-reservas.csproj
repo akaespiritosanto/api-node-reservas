@@ -14,4 +14,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="api-node-reservas.Tests\**\*.cs" />
+    <Content Remove="api-node-reservas.Tests\**\*" />
+    <None Remove="api-node-reservas.Tests\**\*" />
+  </ItemGroup>
+
 </Project>

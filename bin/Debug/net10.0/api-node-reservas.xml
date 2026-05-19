@@ -29,11 +29,6 @@
             Remove uma configuracao de mapeamento.
             </summary>
         </member>
-        <member name="M:api_node_reservas.Controllers.ProcessamentoController.CreateKnowledgeTables">
-            <summary>
-            Cria as tabelas Node, Context e Arc se ainda nao existirem.
-            </summary>
-        </member>
         <member name="M:api_node_reservas.Controllers.ProcessamentoController.Process(System.Int32,System.Int32)">
             <summary>
             Processa os registos novos ou atualizados para a KB.

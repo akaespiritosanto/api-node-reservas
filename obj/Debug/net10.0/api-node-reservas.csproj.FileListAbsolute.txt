@@ -1,14 +1,6 @@
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.csproj.AssemblyReference.cache
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\rpswa.dswa.cache.json
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.GeneratedMSBuildEditorConfig.editorconfig
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.AssemblyInfoInputs.cache
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.AssemblyInfo.cs
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.csproj.CoreCompileInputs.cache
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.MvcApplicationPartsAssemblyInfo.cs
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.MvcApplicationPartsAssemblyInfo.cache
-C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.sourcelink.json
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\appsettings.Development.json
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\appsettings.json
+C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\Data\mapeamentos.json
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\api-node-reservas.staticwebassets.endpoints.json
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\api-node-reservas.exe
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\api-node-reservas.deps.json
@@ -61,6 +53,15 @@ C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\runtimes\win\lib\net9
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\runtimes\win-arm64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.csproj.AssemblyReference.cache
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.AssemblyInfoInputs.cache
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.AssemblyInfo.cs
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.csproj.CoreCompileInputs.cache
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.sourcelink.json
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\rjimswa.dswa.cache.json
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
@@ -77,4 +78,3 @@ C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.xml
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.pdb
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\api-node-reservas.genruntimeconfig.cache
 C:\Users\afons\Desktop\api-node-reservas\obj\Debug\net10.0\ref\api-node-reservas.dll
-C:\Users\afons\Desktop\api-node-reservas\bin\Debug\net10.0\Data\mapeamentos.json

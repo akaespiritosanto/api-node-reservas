@@ -7,12 +7,6 @@ x-api-key: {{apiKey}}
 
 ###
 
-POST {{api_node_reservas_HostAddress}}/api/processamento/criar-tabelas-kb
-Accept: application/json
-x-api-key: {{apiKey}}
-
-###
-
 POST {{api_node_reservas_HostAddress}}/api/processamento/1?limit=100
 Accept: application/json
 x-api-key: {{apiKey}}

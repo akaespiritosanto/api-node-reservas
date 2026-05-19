@@ -1,5 +1,6 @@
+using api_node_reservas.ApiKeyAuth;
 using api_node_reservas.Data;
-using api_node_reservas.Middleware;
+using api_node_reservas.ExceptionHandling;
 using api_node_reservas.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -27,7 +28,6 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ReservasDbContext>(options => options.UseSqlServer(reservasConnectionString));
 builder.Services.AddDbContext<KnowledgeDbContext>(options => options.UseSqlServer(knowledgeConnectionString));
 builder.Services.AddSingleton<MappingRepository>();
-builder.Services.AddScoped<KnowledgeTableService>();
 builder.Services.AddScoped<KnowledgeProcessingService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -70,7 +70,8 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseMiddleware<ApiKeyMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ApiKeyAuthMiddleware>();
 
 app.UseAuthorization();
 

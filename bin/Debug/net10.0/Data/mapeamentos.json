@@ -6,8 +6,8 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "data_pedido",
     "UpdateDateFieldName": "data_actualizacao",
-    "LastProcessedId": 0,
-    "LastSuccessfulProcessingDate": null,
+    "LastProcessedId": 9,
+    "LastSuccessfulProcessingDate": "2026-05-18T09:58:48.2537689Z",
     "Mapping": {
       "Tabela": "Reserva",
       "Tipo": "Reserva",
@@ -37,8 +37,8 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "data_criacao",
     "UpdateDateFieldName": "data_actualizacao",
-    "LastProcessedId": 0,
-    "LastSuccessfulProcessingDate": null,
+    "LastProcessedId": 18,
+    "LastSuccessfulProcessingDate": "2026-05-14T14:13:14.1051498Z",
     "Mapping": {
       "Tabela": "ProdutoReservado",
       "Tipo": "ProdutoReservado",

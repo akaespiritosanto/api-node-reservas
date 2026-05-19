@@ -17,19 +17,6 @@ public class ProcessamentoController : ControllerBase
     }
 
     /// <summary>
-    /// Cria as tabelas Node, Context e Arc se ainda nao existirem.
-    /// </summary>
-    [HttpPost("criar-tabelas-kb")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateKnowledgeTables()
-    {
-        await processingService.CreateKnowledgeTablesAsync();
-        return NoContent();
-    }
-
-    /// <summary>
     /// Processa os registos novos ou atualizados para a KB.
     /// </summary>
     [HttpPost("{mappingId:int}")]

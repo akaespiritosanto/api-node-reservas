@@ -1,15 +1,17 @@
 using api_node_reservas.Dtos;
 
-namespace api_node_reservas.Middleware;
+namespace api_node_reservas.ApiKeyAuth;
 
-public class ApiKeyMiddleware
+public class ApiKeyAuthMiddleware
 {
     private const string HeaderName = "x-api-key";
     private readonly RequestDelegate next;
+    private readonly ILogger<ApiKeyAuthMiddleware> logger;
 
-    public ApiKeyMiddleware(RequestDelegate next)
+    public ApiKeyAuthMiddleware(RequestDelegate next, ILogger<ApiKeyAuthMiddleware> logger)
     {
         this.next = next;
+        this.logger = logger;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -24,6 +26,7 @@ public class ApiKeyMiddleware
 
         if (string.IsNullOrWhiteSpace(configuredApiKey))
         {
+            logger.LogError("API_KEY is not configured.");
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "API_KEY nao foi configurada no ficheiro .env." });
             return;
@@ -31,6 +34,7 @@ public class ApiKeyMiddleware
 
         if (!context.Request.Headers.TryGetValue(HeaderName, out var receivedApiKey) || receivedApiKey != configuredApiKey)
         {
+            logger.LogWarning("Request blocked because the API key is missing or invalid.");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "x-api-key invalida ou em falta." });
             return;

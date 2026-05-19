@@ -12,19 +12,19 @@ public class KnowledgeProcessingService
     private readonly ReservasDbContext reservasDbContext;
     private readonly KnowledgeDbContext knowledgeDbContext;
     private readonly MappingRepository mappingRepository;
-    private readonly KnowledgeTableService tableService;
+    private readonly ILogger<KnowledgeProcessingService> logger;
     private static readonly Regex SafeSqlName = new("^[A-Za-z_][A-Za-z0-9_]*$", RegexOptions.Compiled);
 
     public KnowledgeProcessingService(
         ReservasDbContext reservasDbContext,
         KnowledgeDbContext knowledgeDbContext,
         MappingRepository mappingRepository,
-        KnowledgeTableService tableService)
+        ILogger<KnowledgeProcessingService> logger)
     {
         this.reservasDbContext = reservasDbContext;
         this.knowledgeDbContext = knowledgeDbContext;
         this.mappingRepository = mappingRepository;
-        this.tableService = tableService;
+        this.logger = logger;
     }
 
     public async Task<ProcessingResultDto?> ProcessMappingAsync(int mappingId, int limit)
@@ -33,11 +33,13 @@ public class KnowledgeProcessingService
 
         if (mapping is null)
         {
+            logger.LogWarning("Mapping {MappingId} was not found.", mappingId);
             return null;
         }
 
+        logger.LogInformation("Processing mapping {MappingId} for table {TableName}.", mapping.Id, mapping.TableName);
+
         ValidateMapping(mapping);
-        await tableService.CreateTablesIfNeededAsync();
 
         List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit);
         List<KnowledgeRecordDto> records = [];
@@ -67,6 +69,8 @@ public class KnowledgeProcessingService
         DateTime processingDate = DateTime.UtcNow;
         mappingRepository.UpdateProcessingState(mapping.Id, lastProcessedId, processingDate);
 
+        logger.LogInformation("Finished mapping {MappingId}. Processed {RecordCount} records.", mapping.Id, records.Count);
+
         return new ProcessingResultDto
         {
             MappingId = mapping.Id,
@@ -82,11 +86,6 @@ public class KnowledgeProcessingService
         };
     }
 
-    public async Task CreateKnowledgeTablesAsync()
-    {
-        await tableService.CreateTablesIfNeededAsync();
-    }
-
     private async Task<List<Dictionary<string, object?>>> ReadRowsToProcessAsync(MappingConfiguration mapping, int limit)
     {
         List<Dictionary<string, object?>> rows = [];
@@ -99,20 +98,9 @@ public class KnowledgeProcessingService
             await using DbCommand command = connection.CreateCommand();
             command.CommandText = BuildSql(mapping);
 
-            DbParameter limitParameter = command.CreateParameter();
-            limitParameter.ParameterName = "@limit";
-            limitParameter.Value = limit;
-            command.Parameters.Add(limitParameter);
-
-            DbParameter lastIdParameter = command.CreateParameter();
-            lastIdParameter.ParameterName = "@lastId";
-            lastIdParameter.Value = mapping.LastProcessedId;
-            command.Parameters.Add(lastIdParameter);
-
-            DbParameter lastDateParameter = command.CreateParameter();
-            lastDateParameter.ParameterName = "@lastDate";
-            lastDateParameter.Value = mapping.LastSuccessfulProcessingDate ?? new DateTime(1900, 1, 1);
-            command.Parameters.Add(lastDateParameter);
+            AddParameter(command, "@limit", limit);
+            AddParameter(command, "@lastId", mapping.LastProcessedId);
+            AddParameter(command, "@lastDate", mapping.LastSuccessfulProcessingDate ?? new DateTime(1900, 1, 1));
 
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
@@ -141,18 +129,15 @@ public class KnowledgeProcessingService
     {
         DateTime now = DateTime.UtcNow;
         SaveResult result = new();
+        string reference = GetReference(record);
 
-        Node? node = await knowledgeDbContext.Nodes.FirstOrDefaultAsync(existingNode =>
-            existingNode.SourceTable == record.SourceTable &&
-            existingNode.SourceId == record.SourceId);
+        Node? node = await knowledgeDbContext.Nodes.FirstOrDefaultAsync(existingNode => existingNode.Reference == reference);
 
         if (node is null)
         {
             node = new Node
             {
-                SourceTable = record.SourceTable,
-                SourceId = record.SourceId,
-                DataCriacao = now
+                Reference = reference
             };
 
             knowledgeDbContext.Nodes.Add(node);
@@ -163,23 +148,12 @@ public class KnowledgeProcessingService
             result.NodeUpdated = true;
         }
 
-        node.Tipo = LimitText(record.Tipo, 100);
-        node.TipoE = LimitText(record.TipoE, 100);
-        node.Descricao = LimitText(record.Descricao, 2000);
-        node.IdInformacao = LimitText(record.IdInformacao, 200);
-        node.Par1 = LimitText(record.Par1, 1000);
-        node.Par2 = LimitText(record.Par2, 1000);
-        node.Par3 = LimitText(record.Par3, 1000);
-        node.Par4 = LimitText(record.Par4, 1000);
-        node.Par5 = LimitText(record.Par5, 1000);
-        node.Par6 = LimitText(record.Par6, 1000);
-        node.Par7 = LimitText(record.Par7, 1000);
-        node.DataActualizacao = now;
+        FillNode(node, record, now);
 
         await knowledgeDbContext.SaveChangesAsync();
 
         List<Context> oldContexts = await knowledgeDbContext.Contexts.Where(context => context.NodeId == node.Id).ToListAsync();
-        List<Arc> oldArcs = await knowledgeDbContext.Arcs.Where(arc => arc.NodeId == node.Id).ToListAsync();
+        List<Arc> oldArcs = await knowledgeDbContext.Arcs.Where(arc => arc.Source == node.Id).ToListAsync();
 
         knowledgeDbContext.Contexts.RemoveRange(oldContexts);
         knowledgeDbContext.Arcs.RemoveRange(oldArcs);
@@ -194,8 +168,11 @@ public class KnowledgeProcessingService
             knowledgeDbContext.Contexts.Add(new Context
             {
                 NodeId = node.Id,
-                Valor = LimitText(contextValue, 1000),
-                DataCriacao = now
+                Description = LimitText(contextValue, 8000),
+                Location = 0,
+                Par1 = null,
+                UpdateDate = now,
+                DescriptionType = null
             });
 
             result.ContextsCreated++;
@@ -210,10 +187,11 @@ public class KnowledgeProcessingService
 
             knowledgeDbContext.Arcs.Add(new Arc
             {
-                NodeId = node.Id,
-                Tipo = LimitText(relation.Type, 100),
-                TargetId = LimitText(relation.TargetId, 200),
-                DataCriacao = now
+                Source = node.Id,
+                Target = ConvertTargetToInt(relation.TargetId),
+                TypeId = 0,
+                Type = LimitText(relation.Type, 50),
+                UpdateDate = now
             });
 
             result.ArcsCreated++;
@@ -222,6 +200,49 @@ public class KnowledgeProcessingService
         await knowledgeDbContext.SaveChangesAsync();
 
         return result;
+    }
+
+    private static void AddParameter(DbCommand command, string name, object value)
+    {
+        DbParameter parameter = command.CreateParameter();
+        parameter.ParameterName = name;
+        parameter.Value = value;
+        command.Parameters.Add(parameter);
+    }
+
+    private static void FillNode(Node node, KnowledgeRecordDto record, DateTime updateDate)
+    {
+        node.Reference = LimitText(GetReference(record), 1000);
+        node.TypeId = record.SourceId;
+        node.Type = LimitText(record.Tipo, 30);
+        node.Description = LimitText(record.Descricao, 8000);
+        node.Par1 = LimitText(record.Par1, 200);
+        node.Par2 = LimitText(record.Par2, 200);
+        node.Par3 = LimitText(record.Par3, 200);
+        node.Par4 = LimitText(record.Par4, 200);
+        node.Par5 = LimitText(record.Par5, 200);
+        node.Par6 = LimitText(record.Par6, 200);
+        node.Par7 = LimitText(record.Par7, 200);
+        node.Link = string.Empty;
+        node.Security = 0;
+        node.UpdateDate = updateDate;
+        node.UpdateUser = 0;
+        node.DescriptionType = null;
+    }
+
+    private static string GetReference(KnowledgeRecordDto record)
+    {
+        return $"{record.SourceTable}-{record.SourceId}";
+    }
+
+    private static int ConvertTargetToInt(string targetId)
+    {
+        if (int.TryParse(targetId, out int value))
+        {
+            return value;
+        }
+
+        return 0;
     }
 
     private static string BuildSql(MappingConfiguration mapping)
