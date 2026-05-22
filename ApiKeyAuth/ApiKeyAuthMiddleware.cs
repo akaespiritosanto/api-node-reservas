@@ -2,6 +2,16 @@ using api_node_reservas.Dtos;
 
 namespace api_node_reservas.ApiKeyAuth;
 
+/*
+================================================================================
+|                           ApiKeyAuthMiddleware                               |
+================================================================================
+| Este middleware protege a API com uma chave simples.                          |
+|                                                                              |
+| Cada pedido precisa enviar o header x-api-key com o mesmo valor configurado   |
+| no ficheiro .env. Os pedidos do Swagger ficam livres para ser facil testar.   |
+================================================================================
+*/
 public class ApiKeyAuthMiddleware
 {
     private const string HeaderName = "x-api-key";

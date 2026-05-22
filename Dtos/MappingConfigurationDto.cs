@@ -3,6 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace api_node_reservas.Dtos;
 
+/*
+================================================================================
+|                         MappingConfigurationDto                              |
+================================================================================
+| Este DTO recebe os dados enviados pelo utilizador quando cria ou altera um    |
+| mapeamento pela API.                                                          |
+|                                                                              |
+| As anotacoes [Required] indicam campos obrigatorios.                          |
+================================================================================
+*/
 public class MappingConfigurationDto
 {
     [Required]

@@ -2,6 +2,16 @@ using api_node_reservas.Dtos;
 
 namespace api_node_reservas.ExceptionHandling;
 
+/*
+================================================================================
+|                        ExceptionHandlingMiddleware                           |
+================================================================================
+| Este middleware apanha erros que acontecem durante um pedido HTTP.            |
+|                                                                              |
+| Assim a API responde sempre com JSON em vez de mostrar mensagens tecnicas     |
+| dificeis de perceber para quem esta a consumir a API.                         |
+================================================================================
+*/
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate next;

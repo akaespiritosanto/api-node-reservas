@@ -6,6 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Controllers;
 
+/*
+================================================================================
+|                            ReservasController                                |
+================================================================================
+| Este controller permite consultar reservas da base de dados de origem.        |
+|                                                                              |
+| Ele serve para ver os dados brutos antes de eles serem mapeados para a base   |
+| de conhecimento.                                                             |
+================================================================================
+*/
 [ApiController]
 [Route("api/reservas")]
 [Produces("application/json")]

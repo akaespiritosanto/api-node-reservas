@@ -6,6 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Controllers;
 
+/*
+================================================================================
+|                       ProdutosReservadosController                           |
+================================================================================
+| Este controller permite consultar produtos reservados da base de origem.      |
+|                                                                              |
+| Tal como o ReservasController, ele mostra os dados antes do processamento.    |
+================================================================================
+*/
 [ApiController]
 [Route("api/produtos-reservados")]
 [Produces("application/json")]

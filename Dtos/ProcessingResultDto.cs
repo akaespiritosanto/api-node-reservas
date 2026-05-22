@@ -1,5 +1,15 @@
 namespace api_node_reservas.Dtos;
 
+/*
+================================================================================
+|                           ProcessingResultDto                                |
+================================================================================
+| Este DTO e a resposta devolvida depois de processar um mapeamento.            |
+|                                                                              |
+| Ele mostra quantos registos foram processados e quantos Nodes, Contexts e Arcs|
+| foram criados ou atualizados.                                                 |
+================================================================================
+*/
 public class ProcessingResultDto
 {
     public int MappingId { get; set; }

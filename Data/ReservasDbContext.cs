@@ -3,6 +3,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Data;
 
+/*
+================================================================================
+|                             ReservasDbContext                                |
+================================================================================
+| Este DbContext representa a base de dados de origem, ou seja, a base das      |
+| reservas.                                                                     |
+|                                                                              |
+| Aqui dizemos ao Entity Framework que classes C# correspondem as tabelas e     |
+| colunas reais da base de dados.                                               |
+================================================================================
+*/
 public class ReservasDbContext : DbContext
 {
     public ReservasDbContext(DbContextOptions<ReservasDbContext> options) : base(options)

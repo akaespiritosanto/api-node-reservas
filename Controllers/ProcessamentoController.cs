@@ -4,6 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api_node_reservas.Controllers;
 
+/*
+================================================================================
+|                         ProcessamentoController                              |
+================================================================================
+| Este controller inicia o processamento de um mapeamento.                      |
+|                                                                              |
+| Ele nao faz a conversao diretamente. Ele chama o KnowledgeProcessingService,  |
+| que contem a logica principal.                                                |
+================================================================================
+*/
 [ApiController]
 [Route("api/processamento")]
 [Produces("application/json")]

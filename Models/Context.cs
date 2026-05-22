@@ -1,5 +1,15 @@
 namespace api_node_reservas.Models;
 
+/*
+================================================================================
+|                                 Context                                      |
+================================================================================
+| Esta classe representa textos extra ligados a um Node.                        |
+|                                                                              |
+| No processamento, os campos definidos em Contexts no mapeamento sao gravados  |
+| nesta tabela.                                                                 |
+================================================================================
+*/
 public class Context
 {
     public int Id { get; set; }

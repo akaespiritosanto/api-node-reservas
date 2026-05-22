@@ -5,6 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api_node_reservas.Controllers;
 
+/*
+================================================================================
+|                          MapeamentosController                               |
+================================================================================
+| Este controller recebe pedidos HTTP para gerir os mapeamentos.                |
+|                                                                              |
+| Um mapeamento diz a API como deve transformar uma tabela da base de reservas  |
+| em dados para a base de conhecimento.                                         |
+================================================================================
+*/
 [ApiController]
 [Route("api/mapeamentos")]
 [Produces("application/json")]

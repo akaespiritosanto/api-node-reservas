@@ -3,6 +3,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Data;
 
+/*
+================================================================================
+|                            KnowledgeDbContext                                |
+================================================================================
+| Este DbContext representa a base de conhecimento.                             |
+|                                                                              |
+| Aqui ligamos as classes C# as tabelas reais da base de dados e indicamos o    |
+| nome de cada coluna. Assim o Entity Framework sabe como ler e gravar dados.   |
+================================================================================
+*/
 public class KnowledgeDbContext : DbContext
 {
     public KnowledgeDbContext(DbContextOptions<KnowledgeDbContext> options) : base(options)
@@ -17,7 +27,7 @@ public class KnowledgeDbContext : DbContext
     {
         modelBuilder.Entity<Node>().ToTable("Node");
         modelBuilder.Entity<Node>().HasKey(node => node.Id);
-        modelBuilder.Entity<Node>().HasIndex(node => node.Reference).IsUnique();
+        modelBuilder.Entity<Node>().HasIndex(node => new { node.TypeId, node.Type }).IsUnique();
         modelBuilder.Entity<Node>().Property(node => node.Id).HasColumnName("id");
         modelBuilder.Entity<Node>().Property(node => node.Reference).HasColumnName("reference").HasMaxLength(1000);
         modelBuilder.Entity<Node>().Property(node => node.TypeId).HasColumnName("typeId");

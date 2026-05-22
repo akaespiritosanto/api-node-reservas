@@ -1,5 +1,15 @@
 namespace api_node_reservas.Models;
 
+/*
+================================================================================
+|                            ProdutoReservado                                  |
+================================================================================
+| Esta classe representa uma linha da tabela ProdutoReservado da base de origem.|
+|                                                                              |
+| Cada produto reservado pode ser transformado num Node quando o seu mapeamento |
+| for processado.                                                               |
+================================================================================
+*/
 public class ProdutoReservado
 {
     public int Id { get; set; }

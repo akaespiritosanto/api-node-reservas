@@ -4,6 +4,16 @@ using System.Text.Json;
 
 namespace api_node_reservas.Services;
 
+/*
+================================================================================
+|                            MappingRepository                                 |
+================================================================================
+| Esta classe guarda e le os mapeamentos no ficheiro Data/mapeamentos.json.     |
+|                                                                              |
+| Um mapeamento explica como uma tabela da base de reservas deve ser convertida |
+| para Nodes, Contexts e Arcs da base de conhecimento.                          |
+================================================================================
+*/
 public class MappingRepository
 {
     private readonly string filePath;
@@ -133,6 +143,7 @@ public class MappingRepository
                     Tabela = "Reserva",
                     Tipo = "Reserva",
                     TipoE = "Reserva",
+                    Reference = "referencia",
                     Descricao = "observacoes",
                     IdInformacao = "id",
                     Par1 = "numero",
@@ -159,6 +170,7 @@ public class MappingRepository
                     Tabela = "ProdutoReservado",
                     Tipo = "ProdutoReservado",
                     TipoE = "Produto",
+                    Reference = "referencia",
                     Descricao = "nome_produto",
                     IdInformacao = "id",
                     Par1 = "id_reserva",

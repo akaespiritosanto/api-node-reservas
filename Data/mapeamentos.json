@@ -7,63 +7,26 @@
     "CreationDateFieldName": "data_pedido",
     "UpdateDateFieldName": "data_actualizacao",
     "LastProcessedId": 9,
-    "LastSuccessfulProcessingDate": "2026-05-18T09:58:48.2537689Z",
+    "LastSuccessfulProcessingDate": "2026-05-22T14:18:54.4963109Z",
     "Mapping": {
       "Tabela": "Reserva",
-      "Tipo": "Reserva",
+      "Tipo": "tipo",
       "TipoE": "Reserva",
+      "Reference": "referencia",
       "Descricao": "observacoes",
       "IdInformacao": "id",
       "Par1": "numero",
-      "Par2": "referencia",
-      "Par3": "nome_utilizador_confirmacao",
-      "Par4": "",
-      "Par5": "",
-      "Par6": "",
-      "Par7": "",
+      "Par2": "estado",
+      "Par3": "id_vendedor",
+      "Par4": "id_externo",
+      "Par5": "sistema_externo",
+      "Par6": "estado_pagamento",
+      "Par7": "id_canal",
       "Contexts": [
-        "estado",
-        "estado_pagamento",
-        "id_canal"
+        "nome_utilizador_confirmacao"
       ],
       "Parent": [],
       "Relations": []
-    }
-  },
-  {
-    "Id": 2,
-    "TableName": "ProdutoReservado",
-    "DetectionMethod": "Id",
-    "IdFieldName": "id",
-    "CreationDateFieldName": "data_criacao",
-    "UpdateDateFieldName": "data_actualizacao",
-    "LastProcessedId": 18,
-    "LastSuccessfulProcessingDate": "2026-05-14T14:13:14.1051498Z",
-    "Mapping": {
-      "Tabela": "ProdutoReservado",
-      "Tipo": "ProdutoReservado",
-      "TipoE": "Produto",
-      "Descricao": "nome_produto",
-      "IdInformacao": "id",
-      "Par1": "id_reserva",
-      "Par2": "id_produto",
-      "Par3": "referencia",
-      "Par4": "DataInicio",
-      "Par5": "DataFim",
-      "Par6": "",
-      "Par7": "",
-      "Contexts": [
-        "estado",
-        "quantidade",
-        "id_entidade"
-      ],
-      "Parent": [],
-      "Relations": [
-        {
-          "Type": "pertence_a_reserva",
-          "TargetId": "id_reserva"
-        }
-      ]
     }
   }
 ]

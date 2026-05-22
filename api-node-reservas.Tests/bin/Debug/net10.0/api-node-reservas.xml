@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>api-node-reservas</name>
+    </assembly>
+    <members>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.GetAll">
+            <summary>
+            Lista todas as configuracoes de mapeamento.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.GetById(System.Int32)">
+            <summary>
+            Obtem uma configuracao de mapeamento pelo ID.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.Create(api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Cria uma nova configuracao de mapeamento.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.Update(System.Int32,api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Atualiza uma configuracao de mapeamento.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.Delete(System.Int32)">
+            <summary>
+            Remove uma configuracao de mapeamento.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.ProcessamentoController.Process(System.Int32,System.Int32)">
+            <summary>
+            Processa os registos novos ou atualizados para a KB.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.ProdutosReservadosController.GetAll(System.Int32)">
+            <summary>
+            Lista produtos reservados da tabela ProdutoReservado.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.ProdutosReservadosController.GetById(System.Int32)">
+            <summary>
+            Obtem um produto reservado pelo ID.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.ReservasController.GetAll(System.Int32)">
+            <summary>
+            Lista reservas da tabela Reserva.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.ReservasController.GetById(System.Int32)">
+            <summary>
+            Obtem uma reserva pelo ID.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>

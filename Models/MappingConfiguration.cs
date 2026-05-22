@@ -1,5 +1,15 @@
 namespace api_node_reservas.Models;
 
+/*
+================================================================================
+|                         MappingConfiguration                                 |
+================================================================================
+| Esta classe representa um mapeamento completo.                                |
+|                                                                              |
+| Ela guarda a tabela de origem, a forma de detetar novos registos e os campos  |
+| que vao ser copiados para a base de conhecimento.                             |
+================================================================================
+*/
 public class MappingConfiguration
 {
     public int Id { get; set; }
