@@ -1,17 +1,5 @@
 namespace api_node_reservas.Models;
 
-/*
-================================================================================
-|                              KbMapping                                       |
-================================================================================
-| Esta classe diz de onde vem cada campo que vai ser guardado na base de        |
-| conhecimento.                                                                |
-|                                                                              |
-| Cada propriedade pode ter:                                                    |
-| - o nome de uma coluna da tabela de origem;                                   |
-| - ou um valor fixo, como "Reserva" ou "Produto".                              |
-================================================================================
-*/
 public class KbMapping
 {
     public string Tabela { get; set; } = string.Empty;
@@ -27,7 +15,7 @@ public class KbMapping
     public string Par5 { get; set; } = string.Empty;
     public string Par6 { get; set; } = string.Empty;
     public string Par7 { get; set; } = string.Empty;
-    public List<string> Contexts { get; set; } = [];
-    public List<string> Parent { get; set; } = [];
-    public List<KbRelationMapping> Relations { get; set; } = [];
+    public List<string> Contexts { get; set; } = new List<string>();
+    public List<string> Parent { get; set; } = new List<string>();
+    public List<KbRelationMapping> Relations { get; set; } = new List<KbRelationMapping>();
 }

@@ -21,5 +21,5 @@ public class ProcessingResultDto
     public int ArcsCreated { get; set; }
     public int LastProcessedId { get; set; }
     public DateTime ProcessingDate { get; set; }
-    public List<KnowledgeRecordDto> Records { get; set; } = [];
+    public List<KnowledgeRecordDto> Records { get; set; } = new List<KnowledgeRecordDto>();
 }

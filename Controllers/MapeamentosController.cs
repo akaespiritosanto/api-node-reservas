@@ -7,12 +7,10 @@ namespace api_node_reservas.Controllers;
 
 /*
 ================================================================================
-|                          MapeamentosController                               |
+                            Mapping configuration API
 ================================================================================
-| Este controller recebe pedidos HTTP para gerir os mapeamentos.                |
-|                                                                              |
-| Um mapeamento diz a API como deve transformar uma tabela da base de reservas  |
-| em dados para a base de conhecimento.                                         |
+ These endpoints manage the mapping definitions. A mapping is the set of rules
+ that explains how one source table should be copied to the knowledge database.
 ================================================================================
 */
 [ApiController]
@@ -48,6 +46,25 @@ public class MapeamentosController : ControllerBase
     public ActionResult<MappingConfiguration> GetById(int id)
     {
         MappingConfiguration? mapping = repository.GetById(id);
+
+        if (mapping is null)
+        {
+            return NotFound(new ErrorDto { Message = "Mapeamento nao encontrado." });
+        }
+
+        return Ok(mapping);
+    }
+
+    /// <summary>
+    /// Obtem uma configuracao de mapeamento pelo nome da tabela.
+    /// </summary>
+    [HttpGet("tabela/{tableName}")]
+    [ProducesResponseType(typeof(MappingConfiguration), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status404NotFound)]
+    public ActionResult<MappingConfiguration> GetByTableName(string tableName)
+    {
+        MappingConfiguration? mapping = repository.GetByTableName(tableName);
 
         if (mapping is null)
         {

@@ -5,12 +5,10 @@ namespace api_node_reservas.Data;
 
 /*
 ================================================================================
-|                            KnowledgeDbContext                                |
+                             Knowledge database
 ================================================================================
-| Este DbContext representa a base de conhecimento.                             |
-|                                                                              |
-| Aqui ligamos as classes C# as tabelas reais da base de dados e indicamos o    |
-| nome de cada coluna. Assim o Entity Framework sabe como ler e gravar dados.   |
+ This DbContext points to the final database where processed information is saved
+ as Nodes, Contexts and Arcs.
 ================================================================================
 */
 public class KnowledgeDbContext : DbContext

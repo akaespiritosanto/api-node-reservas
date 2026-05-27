@@ -1,15 +1,5 @@
 namespace api_node_reservas.Models;
 
-/*
-================================================================================
-|                                  Node                                        |
-================================================================================
-| Esta classe representa a tabela Node da base de conhecimento.                 |
-|                                                                              |
-| Um Node e a informacao principal criada a partir de uma linha da base de      |
-| reservas. Neste projeto, ele e identificado por TypeId + Type.                |
-================================================================================
-*/
 public class Node
 {
     public int Id { get; set; }

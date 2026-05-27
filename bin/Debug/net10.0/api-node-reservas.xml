@@ -14,6 +14,11 @@
             Obtem uma configuracao de mapeamento pelo ID.
             </summary>
         </member>
+        <member name="M:api_node_reservas.Controllers.MapeamentosController.GetByTableName(System.String)">
+            <summary>
+            Obtem uma configuracao de mapeamento pelo nome da tabela.
+            </summary>
+        </member>
         <member name="M:api_node_reservas.Controllers.MapeamentosController.Create(api_node_reservas.Dtos.MappingConfigurationDto)">
             <summary>
             Cria uma nova configuracao de mapeamento.
@@ -34,24 +39,9 @@
             Processa os registos novos ou atualizados para a KB.
             </summary>
         </member>
-        <member name="M:api_node_reservas.Controllers.ProdutosReservadosController.GetAll(System.Int32)">
+        <member name="M:api_node_reservas.Controllers.ProcessamentoController.ProcessByTableName(System.String,System.Int32)">
             <summary>
-            Lista produtos reservados da tabela ProdutoReservado.
-            </summary>
-        </member>
-        <member name="M:api_node_reservas.Controllers.ProdutosReservadosController.GetById(System.Int32)">
-            <summary>
-            Obtem um produto reservado pelo ID.
-            </summary>
-        </member>
-        <member name="M:api_node_reservas.Controllers.ReservasController.GetAll(System.Int32)">
-            <summary>
-            Lista reservas da tabela Reserva.
-            </summary>
-        </member>
-        <member name="M:api_node_reservas.Controllers.ReservasController.GetById(System.Int32)">
-            <summary>
-            Obtem uma reserva pelo ID.
+            Processa os registos novos ou atualizados para a KB pelo nome da tabela.
             </summary>
         </member>
         <member name="T:Program">

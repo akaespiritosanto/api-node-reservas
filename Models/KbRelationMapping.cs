@@ -14,4 +14,5 @@ public class KbRelationMapping
 {
     public string Type { get; set; } = string.Empty;
     public string TargetId { get; set; } = string.Empty;
+    public string TargetType { get; set; } = string.Empty;
 }

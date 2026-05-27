@@ -1,15 +1,5 @@
 namespace api_node_reservas.Services;
 
-/*
-================================================================================
-|                              DotEnvService                                   |
-================================================================================
-| Este servico le o ficheiro .env e coloca os valores nas variaveis de ambiente.|
-|                                                                              |
-| Exemplo de linha lida: API_KEY=123. Depois o projeto consegue usar esse valor |
-| com Environment.GetEnvironmentVariable("API_KEY").                            |
-================================================================================
-*/
 public static class DotEnvService
 {
     public static void Load(string filePath)

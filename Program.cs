@@ -8,39 +8,22 @@ using System.Reflection;
 
 /*
 ================================================================================
-|                                  Program                                     |
+                              Application startup
 ================================================================================
-| Este ficheiro arranca a API.                                                  |
-|                                                                              |
-| Aqui sao carregadas as configuracoes, registados os servicos, ligados os      |
-| DbContexts as bases de dados e ativados o Swagger, autenticacao e controllers.|
+ This file configures the API before it starts:
+ - Loads environment variables from .env.
+ - Connects to the source database and the knowledge database.
+ - Registers controllers, services, Swagger, error handling and API key security.
 ================================================================================
 */
 DotEnvService.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
-/*
-================================================================================
-|                              Logging                                         |
-================================================================================
-| Configura onde a API escreve mensagens de log.                                |
-================================================================================
-*/
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-/*
-================================================================================
-|                         Connection Strings                                   |
-================================================================================
-| Le as ligacoes as bases de dados.                                             |
-|                                                                              |
-| RESERVAS_DB_CONNECTION_STRING aponta para a base de origem.                   |
-| KB_DB_CONNECTION_STRING aponta para a base de conhecimento.                   |
-================================================================================
-*/
 string oldConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? string.Empty;
@@ -51,13 +34,6 @@ string reservasConnectionString = Environment.GetEnvironmentVariable("RESERVAS_D
 string knowledgeConnectionString = Environment.GetEnvironmentVariable("KB_DB_CONNECTION_STRING")
     ?? oldConnectionString;
 
-/*
-================================================================================
-|                           Dependency Injection                               |
-================================================================================
-| Regista classes que vao ser usadas pelos controllers e services.              |
-================================================================================
-*/
 builder.Services.AddControllers();
 builder.Services.AddDbContext<ReservasDbContext>(options => options.UseSqlServer(reservasConnectionString));
 builder.Services.AddDbContext<KnowledgeDbContext>(options => options.UseSqlServer(knowledgeConnectionString));
@@ -101,13 +77,6 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-/*
-================================================================================
-|                              HTTP Pipeline                                   |
-================================================================================
-| Define a ordem pela qual cada pedido HTTP passa antes de chegar ao controller.|
-================================================================================
-*/
 app.UseSwagger();
 app.UseSwaggerUI();
 

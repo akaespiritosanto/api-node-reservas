@@ -4,12 +4,10 @@ namespace api_node_reservas.ExceptionHandling;
 
 /*
 ================================================================================
-|                        ExceptionHandlingMiddleware                           |
+                              Error handling
 ================================================================================
-| Este middleware apanha erros que acontecem durante um pedido HTTP.            |
-|                                                                              |
-| Assim a API responde sempre com JSON em vez de mostrar mensagens tecnicas     |
-| dificeis de perceber para quem esta a consumir a API.                         |
+ This middleware catches unexpected exceptions and returns a JSON error response
+ instead of exposing internal stack traces to the API user.
 ================================================================================
 */
 public class ExceptionHandlingMiddleware
@@ -32,14 +30,18 @@ public class ExceptionHandlingMiddleware
         catch (InvalidOperationException exception)
         {
             logger.LogWarning(exception, "Invalid operation while processing the request.");
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = exception.Message });
+            await WriteErrorAsync(context, StatusCodes.Status400BadRequest, exception.Message);
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Unexpected error while processing the request.");
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "Erro interno no servidor." });
+            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Erro interno no servidor.");
         }
+    }
+
+    private static async Task WriteErrorAsync(HttpContext context, int statusCode, string message)
+    {
+        context.Response.StatusCode = statusCode;
+        await context.Response.WriteAsJsonAsync(new ErrorDto { Message = message });
     }
 }

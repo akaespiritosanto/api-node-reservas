@@ -5,13 +5,10 @@ namespace api_node_reservas.Data;
 
 /*
 ================================================================================
-|                             ReservasDbContext                                |
+                              Source database
 ================================================================================
-| Este DbContext representa a base de dados de origem, ou seja, a base das      |
-| reservas.                                                                     |
-|                                                                              |
-| Aqui dizemos ao Entity Framework que classes C# correspondem as tabelas e     |
-| colunas reais da base de dados.                                               |
+ This DbContext points to the reservas database. The processing service mainly
+ uses its database connection because mappings can choose different columns.
 ================================================================================
 */
 public class ReservasDbContext : DbContext

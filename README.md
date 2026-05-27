@@ -1,0 +1,352 @@
+# API Reservas KB
+
+This project is an ASP.NET Core API that copies information from a reservations database into a knowledge database.
+
+The main idea is simple:
+
+1. The source database has normal business tables, like `Reserva` and `ProdutoReservado`.
+2. The file `Data/mapeamentos.json` explains how each source table should be converted.
+3. The API reads new or updated rows from the source database.
+4. The API saves the converted information in the knowledge database as `Node`, `Context` and `Arc` records.
+
+## What Each Part Does
+
+`Controllers`
+
+These files expose the HTTP endpoints used by Swagger.
+
+- `MapeamentosController.cs` manages mapping configurations.
+- `ProcessamentoController.cs` runs the processing.
+
+`Services`
+
+These files contain the main project logic.
+
+- `MappingRepository.cs` reads and writes `Data/mapeamentos.json`.
+- `KnowledgeProcessingService.cs` coordinates the full processing flow.
+- `KnowledgeProcessingService.Reading.cs` reads rows from the source database.
+- `KnowledgeProcessingService.Mapping.cs` converts one database row to a DTO.
+- `KnowledgeProcessingService.Saving.cs` saves data into the knowledge database.
+- `KnowledgeProcessingService.Sql.cs` builds the SQL query used to read source rows.
+- `KnowledgeProcessingService.Validation.cs` checks if the mapping is valid.
+- `DotEnvService.cs` loads values from the `.env` file.
+
+`Data`
+
+These files configure the two database connections.
+
+- `ReservasDbContext.cs` connects to the source reservations database.
+- `KnowledgeDbContext.cs` connects to the knowledge database.
+- `mapeamentos.json` stores the mapping configuration and the processing checkpoint.
+
+`Models`
+
+These classes represent database tables and mapping structures.
+
+`Dtos`
+
+These classes represent data sent to or returned from the API.
+
+## Important Words
+
+`Mapping`
+
+A mapping explains how a table from the source database becomes knowledge database records.
+
+Example: the `Reserva` mapping says that:
+
+- `referencia` becomes `Reference`
+- `observacoes` becomes `Descricao`
+- `id` becomes `IdInformacao`
+- `estado`, `estado_pagamento` and `id_canal` become `Context` values
+
+`Node`
+
+A `Node` is the main knowledge record.
+
+Example: one reservation can become one `Node`.
+
+`Context`
+
+A `Context` is extra information connected to a `Node`.
+
+Example: reservation status, payment status or channel id.
+
+`Arc`
+
+An `Arc` is a relation between two `Node` records.
+
+Example: a reserved product can point to the reservation it belongs to.
+
+`Checkpoint`
+
+A checkpoint tells the API what was already processed.
+
+The checkpoint is stored in `Data/mapeamentos.json`:
+
+```json
+"LastProcessedId": 9,
+"LastSuccessfulProcessingDate": "2026-05-27T11:11:14.2919048Z"
+```
+
+This prevents the API from processing the same old rows every time.
+
+## Requirements
+
+- .NET SDK compatible with `net10.0`
+- SQL Server
+- Two databases:
+  - source database, for example `api_aggregations`
+  - knowledge database, for example `api_node_reservas`
+
+## Environment Variables
+
+The project reads configuration from `.env`.
+
+Example:
+
+```env
+API_KEY=test
+
+RESERVAS_DB_CONNECTION_STRING=Server=YOUR_SERVER;Database=api_aggregations;Trusted_Connection=true;TrustServerCertificate=true;
+
+KB_DB_CONNECTION_STRING=Server=YOUR_SERVER;Database=api_node_reservas;Trusted_Connection=true;TrustServerCertificate=true;
+```
+
+`API_KEY`
+
+The key that must be sent in Swagger using the `x-api-key` header.
+
+`RESERVAS_DB_CONNECTION_STRING`
+
+Connection string for the source database.
+
+`KB_DB_CONNECTION_STRING`
+
+Connection string for the knowledge database.
+
+## How To Run
+
+From the project folder:
+
+```bash
+dotnet run
+```
+
+Then open Swagger in the browser.
+
+The local URL depends on your launch settings, but it is usually something like:
+
+```txt
+http://localhost:5253/swagger
+```
+
+## Swagger Authentication
+
+All API requests need an API key.
+
+In Swagger, click `Authorize` and enter the value from `.env`.
+
+Example:
+
+```txt
+test
+```
+
+The API expects this header:
+
+```txt
+x-api-key: test
+```
+
+## Main Endpoints
+
+List all mappings:
+
+```txt
+GET /api/mapeamentos
+```
+
+Get one mapping by id:
+
+```txt
+GET /api/mapeamentos/1
+```
+
+Get one mapping by table name:
+
+```txt
+GET /api/mapeamentos/tabela/Reserva
+```
+
+Process by mapping id:
+
+```txt
+POST /api/processamento/1?limit=100
+```
+
+Process by table name:
+
+```txt
+POST /api/processamento/tabela/Reserva?limit=100
+```
+
+## Correct Processing Order
+
+Process `Reserva` first:
+
+```txt
+POST /api/processamento/tabela/Reserva?limit=100
+```
+
+Then process `ProdutoReservado`:
+
+```txt
+POST /api/processamento/tabela/ProdutoReservado?limit=100
+```
+
+This order matters because `ProdutoReservado` can create an `Arc` relation pointing to a `Reserva` node.
+
+If the reservation node does not exist yet, the relation cannot be created.
+
+## How Processing Works
+
+When you process a mapping, the API:
+
+1. Opens `Data/mapeamentos.json`.
+2. Finds the mapping by id or table name.
+3. Reads only rows that are new or updated.
+4. Converts each source row to a `KnowledgeRecordDto`.
+5. Saves or updates a `Node`.
+6. Removes old `Context` and `Arc` rows for that node.
+7. Adds the new `Context` and `Arc` rows.
+8. Updates the checkpoint in `Data/mapeamentos.json`.
+
+## Why Nothing Appears After Deleting SQL Data Manually
+
+If you manually delete records from the knowledge database and then process again, the API may not recreate them.
+
+That happens because the checkpoint in `Data/mapeamentos.json` still says those records were already processed.
+
+Example:
+
+```json
+"LastProcessedId": 9,
+"LastSuccessfulProcessingDate": "2026-05-27T11:11:14.2919048Z"
+```
+
+The API then searches only for rows newer than that id/date.
+
+To process everything again, reset the checkpoint:
+
+```json
+"LastProcessedId": 0,
+"LastSuccessfulProcessingDate": null
+```
+
+Then run the processing endpoint again.
+
+## Testing Workflow For Beginners
+
+If you want to test from the beginning:
+
+1. Clear the generated data from the knowledge database if needed.
+2. Open `Data/mapeamentos.json`.
+3. Set `LastProcessedId` to `0`.
+4. Set `LastSuccessfulProcessingDate` to `null`.
+5. Run `POST /api/processamento/tabela/Reserva?limit=100`.
+6. Run `POST /api/processamento/tabela/ProdutoReservado?limit=100`.
+7. Check the `Node`, `Context` and `Arc` tables in the knowledge database.
+
+## Mapping Example
+
+A simple `Reserva` mapping looks like this:
+
+```json
+{
+  "Id": 1,
+  "TableName": "Reserva",
+  "DetectionMethod": "Id",
+  "IdFieldName": "id",
+  "CreationDateFieldName": "data_pedido",
+  "UpdateDateFieldName": "data_actualizacao",
+  "LastProcessedId": 0,
+  "LastSuccessfulProcessingDate": null,
+  "Mapping": {
+    "Tabela": "Reserva",
+    "Tipo": "Reserva",
+    "TipoE": "Reserva",
+    "Reference": "referencia",
+    "Descricao": "observacoes",
+    "IdInformacao": "id",
+    "Par1": "numero",
+    "Par2": "referencia",
+    "Par3": "nome_utilizador_confirmacao",
+    "Par4": "",
+    "Par5": "",
+    "Par6": "",
+    "Par7": "",
+    "Contexts": [
+      "estado",
+      "estado_pagamento",
+      "id_canal"
+    ],
+    "Parent": [],
+    "Relations": []
+  }
+}
+```
+
+## Common Problems
+
+`401 Unauthorized`
+
+The `x-api-key` header is missing or wrong.
+
+Check `.env` and Swagger authorization.
+
+`Mapeamento nao encontrado`
+
+The mapping id or table name does not exist in `Data/mapeamentos.json`.
+
+`Nome SQL invalido`
+
+A table or column name in the mapping has unsafe characters.
+
+Only simple SQL names are accepted, like:
+
+```txt
+Reserva
+data_actualizacao
+id_reserva
+```
+
+`Arc target was not found`
+
+The API tried to create a relation to another node, but that target node does not exist yet.
+
+Most common fix:
+
+```txt
+Process Reserva before ProdutoReservado.
+```
+
+## Useful Commands
+
+Build the project:
+
+```bash
+dotnet build --no-restore
+```
+
+Run tests:
+
+```bash
+dotnet test --no-build
+```
+
+Run the API:
+
+```bash
+dotnet run
+```

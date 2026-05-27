@@ -4,12 +4,10 @@ namespace api_node_reservas.ApiKeyAuth;
 
 /*
 ================================================================================
-|                           ApiKeyAuthMiddleware                               |
+                                API key security
 ================================================================================
-| Este middleware protege a API com uma chave simples.                          |
-|                                                                              |
-| Cada pedido precisa enviar o header x-api-key com o mesmo valor configurado   |
-| no ficheiro .env. Os pedidos do Swagger ficam livres para ser facil testar.   |
+ This middleware blocks requests that do not send the expected x-api-key header.
+ The expected key comes from the API_KEY environment variable.
 ================================================================================
 */
 public class ApiKeyAuthMiddleware

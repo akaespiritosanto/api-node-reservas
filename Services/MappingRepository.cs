@@ -6,12 +6,10 @@ namespace api_node_reservas.Services;
 
 /*
 ================================================================================
-|                            MappingRepository                                 |
+                              Mapping repository
 ================================================================================
-| Esta classe guarda e le os mapeamentos no ficheiro Data/mapeamentos.json.     |
-|                                                                              |
-| Um mapeamento explica como uma tabela da base de reservas deve ser convertida |
-| para Nodes, Contexts e Arcs da base de conhecimento.                          |
+ This class reads and writes Data/mapeamentos.json. The mapping file tells the
+ processing service which source table columns become Node, Context and Arc data.
 ================================================================================
 */
 public class MappingRepository
@@ -30,18 +28,52 @@ public class MappingRepository
     public List<MappingConfiguration> GetAll()
     {
         string json = File.ReadAllText(filePath);
-        return JsonSerializer.Deserialize<List<MappingConfiguration>>(json, jsonOptions) ?? [];
+        List<MappingConfiguration>? mappings = JsonSerializer.Deserialize<List<MappingConfiguration>>(json, jsonOptions);
+
+        if (mappings is null)
+        {
+            return new List<MappingConfiguration>();
+        }
+
+        return mappings;
     }
 
     public MappingConfiguration? GetById(int id)
     {
-        return GetAll().FirstOrDefault(mapping => mapping.Id == id);
+        List<MappingConfiguration> mappings = GetAll();
+
+        foreach (MappingConfiguration mapping in mappings)
+        {
+            if (mapping.Id == id)
+            {
+                return mapping;
+            }
+        }
+
+        return null;
+    }
+
+    public MappingConfiguration? GetByTableName(string tableName)
+    {
+        List<MappingConfiguration> mappings = GetAll();
+
+        foreach (MappingConfiguration mapping in mappings)
+        {
+            if (mapping.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+            {
+                return mapping;
+            }
+        }
+
+        return null;
     }
 
     public MappingConfiguration Create(MappingConfigurationDto dto)
     {
         List<MappingConfiguration> mappings = GetAll();
-        int nextId = mappings.Count == 0 ? 1 : mappings.Max(mapping => mapping.Id) + 1;
+        int nextId = GetNextId(mappings);
+
+        ValidateTableNameIsAvailable(mappings, dto.TableName, null);
 
         MappingConfiguration mapping = ConvertDtoToModel(dto);
         mapping.Id = nextId;
@@ -54,7 +86,7 @@ public class MappingRepository
     public bool Update(int id, MappingConfigurationDto dto)
     {
         List<MappingConfiguration> mappings = GetAll();
-        MappingConfiguration? existingMapping = mappings.FirstOrDefault(mapping => mapping.Id == id);
+        MappingConfiguration? existingMapping = FindById(mappings, id);
 
         if (existingMapping is null)
         {
@@ -63,6 +95,8 @@ public class MappingRepository
 
         MappingConfiguration updatedMapping = ConvertDtoToModel(dto);
         updatedMapping.Id = id;
+        ValidateTableNameIsAvailable(mappings, dto.TableName, id);
+
         int index = mappings.IndexOf(existingMapping);
         mappings[index] = updatedMapping;
         SaveAll(mappings);
@@ -73,7 +107,7 @@ public class MappingRepository
     public bool Delete(int id)
     {
         List<MappingConfiguration> mappings = GetAll();
-        MappingConfiguration? mapping = mappings.FirstOrDefault(mapping => mapping.Id == id);
+        MappingConfiguration? mapping = FindById(mappings, id);
 
         if (mapping is null)
         {
@@ -88,7 +122,7 @@ public class MappingRepository
     public void UpdateProcessingState(int id, int lastProcessedId, DateTime processingDate)
     {
         List<MappingConfiguration> mappings = GetAll();
-        MappingConfiguration? mapping = mappings.FirstOrDefault(mapping => mapping.Id == id);
+        MappingConfiguration? mapping = FindById(mappings, id);
 
         if (mapping is null)
         {
@@ -98,6 +132,50 @@ public class MappingRepository
         mapping.LastProcessedId = lastProcessedId;
         mapping.LastSuccessfulProcessingDate = processingDate;
         SaveAll(mappings);
+    }
+
+    private static void ValidateTableNameIsAvailable(List<MappingConfiguration> mappings, string tableName, int? currentMappingId)
+    {
+        foreach (MappingConfiguration mapping in mappings)
+        {
+            if (currentMappingId is not null && mapping.Id == currentMappingId)
+            {
+                continue;
+            }
+
+            if (mapping.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Ja existe um mapeamento para a tabela '{tableName}'.");
+            }
+        }
+    }
+
+    private static MappingConfiguration? FindById(List<MappingConfiguration> mappings, int id)
+    {
+        foreach (MappingConfiguration mapping in mappings)
+        {
+            if (mapping.Id == id)
+            {
+                return mapping;
+            }
+        }
+
+        return null;
+    }
+
+    private static int GetNextId(List<MappingConfiguration> mappings)
+    {
+        int biggestId = 0;
+
+        foreach (MappingConfiguration mapping in mappings)
+        {
+            if (mapping.Id > biggestId)
+            {
+                biggestId = mapping.Id;
+            }
+        }
+
+        return biggestId + 1;
     }
 
     private void SaveAll(List<MappingConfiguration> mappings)
@@ -128,9 +206,9 @@ public class MappingRepository
             return;
         }
 
-        List<MappingConfiguration> defaults =
-        [
-            new()
+        List<MappingConfiguration> defaults = new List<MappingConfiguration>
+        {
+            new MappingConfiguration
             {
                 Id = 1,
                 TableName = "Reserva",
@@ -149,15 +227,15 @@ public class MappingRepository
                     Par1 = "numero",
                     Par2 = "referencia",
                     Par3 = "nome_utilizador_confirmacao",
-                    Contexts =
-                    [
+                    Contexts = new List<string>
+                    {
                         "estado",
                         "estado_pagamento",
                         "id_canal"
-                    ]
+                    }
                 }
             },
-            new()
+            new MappingConfiguration
             {
                 Id = 2,
                 TableName = "ProdutoReservado",
@@ -178,23 +256,24 @@ public class MappingRepository
                     Par3 = "referencia",
                     Par4 = "DataInicio",
                     Par5 = "DataFim",
-                    Contexts =
-                    [
+                    Contexts = new List<string>
+                    {
                         "estado",
                         "quantidade",
                         "id_entidade"
-                    ],
-                    Relations =
-                    [
+                    },
+                    Relations = new List<KbRelationMapping>
+                    {
                         new KbRelationMapping
                         {
                             Type = "pertence_a_reserva",
-                            TargetId = "id_reserva"
+                            TargetId = "id_reserva",
+                            TargetType = "Reserva"
                         }
-                    ]
+                    }
                 }
             }
-        ];
+        };
 
         SaveAll(defaults);
     }

@@ -6,12 +6,10 @@ namespace api_node_reservas.Controllers;
 
 /*
 ================================================================================
-|                         ProcessamentoController                              |
+                               Processing API
 ================================================================================
-| Este controller inicia o processamento de um mapeamento.                      |
-|                                                                              |
-| Ele nao faz a conversao diretamente. Ele chama o KnowledgeProcessingService,  |
-| que contem a logica principal.                                                |
+ These endpoints run the conversion from source database rows to the knowledge
+ database. The mapping id chooses which table and fields will be processed.
 ================================================================================
 */
 [ApiController]
@@ -42,20 +40,39 @@ public class ProcessamentoController : ControllerBase
             return BadRequest(new ErrorDto { Message = "O limite deve estar entre 1 e 1000." });
         }
 
-        try
-        {
-            ProcessingResultDto? result = await processingService.ProcessMappingAsync(mappingId, limit);
+        ProcessingResultDto? result = await processingService.ProcessMappingAsync(mappingId, limit);
 
-            if (result is null)
-            {
-                return NotFound(new ErrorDto { Message = "Mapeamento nao encontrado." });
-            }
-
-            return Ok(result);
-        }
-        catch (InvalidOperationException exception)
+        if (result is null)
         {
-            return BadRequest(new ErrorDto { Message = exception.Message });
+            return NotFound(new ErrorDto { Message = "Mapeamento nao encontrado." });
         }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Processa os registos novos ou atualizados para a KB pelo nome da tabela.
+    /// </summary>
+    [HttpPost("tabela/{tableName}")]
+    [ProducesResponseType(typeof(ProcessingResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ProcessingResultDto>> ProcessByTableName(string tableName, [FromQuery] int limit = 100)
+    {
+        if (limit < 1 || limit > 1000)
+        {
+            return BadRequest(new ErrorDto { Message = "O limite deve estar entre 1 e 1000." });
+        }
+
+        ProcessingResultDto? result = await processingService.ProcessMappingByTableNameAsync(tableName, limit);
+
+        if (result is null)
+        {
+            return NotFound(new ErrorDto { Message = "Mapeamento nao encontrado." });
+        }
+
+        return Ok(result);
     }
 }

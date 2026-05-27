@@ -12,9 +12,3 @@ Accept: application/json
 x-api-key: {{apiKey}}
 
 ###
-
-GET {{api_node_reservas_HostAddress}}/api/reservas?limit=100
-Accept: application/json
-x-api-key: {{apiKey}}
-
-###
