@@ -7,6 +7,7 @@ namespace api_node_reservas.Tests;
 public class ApiKeyAuthMiddlewareTests
 {
     [Fact]
+    // Checks that requests without x-api-key are blocked.
     public async Task InvokeAsync_Returns_401_When_Api_Key_Is_Missing()
     {
         Environment.SetEnvironmentVariable("API_KEY", "test-key");
@@ -23,6 +24,7 @@ public class ApiKeyAuthMiddlewareTests
     }
 
     [Fact]
+    // Checks that requests with the correct x-api-key continue to the next middleware.
     public async Task InvokeAsync_Calls_Next_When_Api_Key_Is_Valid()
     {
         Environment.SetEnvironmentVariable("API_KEY", "test-key");

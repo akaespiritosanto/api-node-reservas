@@ -14,6 +14,7 @@ public partial class KnowledgeProcessingService
      the mapping file, so the service uses DbCommand instead of a fixed DbSet.
     ============================================================================
     */
+    // Reads the changed source rows that should be processed for this mapping.
     private async Task<List<Dictionary<string, object?>>> ReadRowsToProcessAsync(MappingConfiguration mapping, int limit)
     {
         List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
@@ -23,6 +24,7 @@ public partial class KnowledgeProcessingService
         {
             await connection.OpenAsync();
 
+            // Read the real column names first so bad mappings fail with a clear message.
             List<string> tableColumns = await ReadTableColumnsAsync(connection, mapping);
             ValidateTableColumns(mapping, tableColumns);
 
@@ -33,10 +35,12 @@ public partial class KnowledgeProcessingService
             AddParameter(command, "@lastId", mapping.LastProcessedId);
             AddParameter(command, "@lastDate", mapping.LastSuccessfulProcessingDate ?? new DateTime(1900, 1, 1));
 
+            // The reader returns rows one by one without loading the full table into memory.
             await using DbDataReader reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
             {
+                // Each row is stored by column name so the mapping can ask for values by name.
                 Dictionary<string, object?> row = new(StringComparer.OrdinalIgnoreCase);
 
                 for (int index = 0; index < reader.FieldCount; index++)
@@ -51,7 +55,7 @@ public partial class KnowledgeProcessingService
         catch (DbException exception)
         {
             throw new InvalidOperationException(
-                $"Erro ao ler a tabela '{mapping.TableName}'. Confirma se o nome da tabela e os campos do mapeamento existem na base de dados. Detalhe: {exception.Message}",
+                $"Error reading table '{mapping.TableName}'. Check whether the table name and mapping fields exist in the database. Detail: {exception.Message}",
                 exception);
         }
         finally
@@ -62,11 +66,13 @@ public partial class KnowledgeProcessingService
         return rows;
     }
 
+    // Reads only the column names from the source table, without reading table data.
     private static async Task<List<string>> ReadTableColumnsAsync(DbConnection connection, MappingConfiguration mapping)
     {
         string table = EscapeSqlName(mapping.TableName);
         List<string> columns = new List<string>();
 
+        // TOP (0) returns no data, but still lets us see which columns the table has.
         await using DbCommand command = connection.CreateCommand();
         command.CommandText = $"SELECT TOP (0) * FROM {table}";
 
@@ -80,8 +86,10 @@ public partial class KnowledgeProcessingService
         return columns;
     }
 
+    // Adds a parameter value to a DbCommand so values are not written directly into SQL text.
     private static void AddParameter(DbCommand command, string name, object value)
     {
+        // Parameters keep values separate from SQL text and make the query safer.
         DbParameter parameter = command.CreateParameter();
         parameter.ParameterName = name;
         parameter.Value = value;

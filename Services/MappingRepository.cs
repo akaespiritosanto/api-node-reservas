@@ -17,6 +17,7 @@ public class MappingRepository
     private readonly string filePath;
     private readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
+    // Builds the path to Data/mapeamentos.json and creates the default file if it does not exist.
     public MappingRepository(IWebHostEnvironment environment)
     {
         string dataFolder = Path.Combine(environment.ContentRootPath, "Data");
@@ -25,6 +26,7 @@ public class MappingRepository
         CreateDefaultFileIfNeeded();
     }
 
+    // Reads all mapping configurations from Data/mapeamentos.json.
     public List<MappingConfiguration> GetAll()
     {
         string json = File.ReadAllText(filePath);
@@ -38,6 +40,7 @@ public class MappingRepository
         return mappings;
     }
 
+    // Finds one mapping by its numeric id.
     public MappingConfiguration? GetById(int id)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -53,6 +56,7 @@ public class MappingRepository
         return null;
     }
 
+    // Finds one mapping by the source table name, for example Reserva.
     public MappingConfiguration? GetByTableName(string tableName)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -68,6 +72,7 @@ public class MappingRepository
         return null;
     }
 
+    // Creates a new mapping, gives it the next id, and saves it to the file.
     public MappingConfiguration Create(MappingConfigurationDto dto)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -83,6 +88,7 @@ public class MappingRepository
         return mapping;
     }
 
+    // Replaces an existing mapping with new values.
     public bool Update(int id, MappingConfigurationDto dto)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -104,6 +110,7 @@ public class MappingRepository
         return true;
     }
 
+    // Removes one mapping from the file.
     public bool Delete(int id)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -119,6 +126,7 @@ public class MappingRepository
         return true;
     }
 
+    // Saves the last processed id and date after processing finishes.
     public void UpdateProcessingState(int id, int lastProcessedId, DateTime processingDate)
     {
         List<MappingConfiguration> mappings = GetAll();
@@ -134,6 +142,7 @@ public class MappingRepository
         SaveAll(mappings);
     }
 
+    // Prevents two mappings from using the same source table name.
     private static void ValidateTableNameIsAvailable(List<MappingConfiguration> mappings, string tableName, int? currentMappingId)
     {
         foreach (MappingConfiguration mapping in mappings)
@@ -145,11 +154,12 @@ public class MappingRepository
 
             if (mapping.TableName.Equals(tableName, StringComparison.OrdinalIgnoreCase))
             {
-                throw new InvalidOperationException($"Ja existe um mapeamento para a tabela '{tableName}'.");
+                throw new InvalidOperationException($"A mapping already exists for table '{tableName}'.");
             }
         }
     }
 
+    // Searches a list of mappings by id.
     private static MappingConfiguration? FindById(List<MappingConfiguration> mappings, int id)
     {
         foreach (MappingConfiguration mapping in mappings)
@@ -163,6 +173,7 @@ public class MappingRepository
         return null;
     }
 
+    // Finds the next id by looking for the biggest current id.
     private static int GetNextId(List<MappingConfiguration> mappings)
     {
         int biggestId = 0;
@@ -178,12 +189,14 @@ public class MappingRepository
         return biggestId + 1;
     }
 
+    // Writes all mappings back to Data/mapeamentos.json.
     private void SaveAll(List<MappingConfiguration> mappings)
     {
         string json = JsonSerializer.Serialize(mappings, jsonOptions);
         File.WriteAllText(filePath, json);
     }
 
+    // Converts the API request DTO into the model saved in the JSON file.
     private static MappingConfiguration ConvertDtoToModel(MappingConfigurationDto dto)
     {
         return new MappingConfiguration
@@ -199,6 +212,7 @@ public class MappingRepository
         };
     }
 
+    // Creates the starter mappings for Reserva and ProdutoReservado.
     private void CreateDefaultFileIfNeeded()
     {
         if (File.Exists(filePath))

@@ -12,6 +12,7 @@ public partial class KnowledgeProcessingService
      mapping really exist in the source table.
     ============================================================================
     */
+    // Checks if the main SQL names in the mapping are safe to use.
     private static void ValidateMapping(MappingConfiguration mapping)
     {
         EscapeSqlName(mapping.TableName);
@@ -20,13 +21,17 @@ public partial class KnowledgeProcessingService
         EscapeSqlName(mapping.UpdateDateFieldName);
     }
 
+    // Builds the list of source table columns that the SQL SELECT must read.
     private static List<string> GetColumnsUsedByMapping(MappingConfiguration mapping, List<string> tableColumns)
     {
         List<string> selectedColumns = new List<string>();
 
+        // These columns are needed to find and order the rows that will be processed.
         AddColumnIfExists(selectedColumns, tableColumns, mapping.IdFieldName);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.CreationDateFieldName);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.UpdateDateFieldName);
+
+        // These columns are the values that become Node fields.
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Tipo);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.TipoE);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Reference);
@@ -42,16 +47,19 @@ public partial class KnowledgeProcessingService
 
         foreach (string context in mapping.Mapping.Contexts)
         {
+            // Context values become rows in the Context table.
             AddColumnIfExists(selectedColumns, tableColumns, context);
         }
 
         foreach (string parent in mapping.Mapping.Parent)
         {
+            // Parent values are optional relation targets.
             AddColumnIfExists(selectedColumns, tableColumns, parent);
         }
 
         foreach (KbRelationMapping relation in mapping.Mapping.Relations)
         {
+            // Relation mappings need the target id and, sometimes, the target type.
             AddColumnIfExists(selectedColumns, tableColumns, relation.TargetId);
             AddColumnIfExists(selectedColumns, tableColumns, relation.TargetType);
         }
@@ -59,6 +67,7 @@ public partial class KnowledgeProcessingService
         return selectedColumns;
     }
 
+    // Checks if the source table contains the columns required by the mapping.
     private static void ValidateTableColumns(MappingConfiguration mapping, List<string> tableColumns)
     {
         List<string> missingColumns = new List<string>();
@@ -99,12 +108,14 @@ public partial class KnowledgeProcessingService
             string existingText = string.Join(", ", tableColumns);
 
             throw new InvalidOperationException(
-                $"O mapeamento da tabela '{mapping.TableName}' usa colunas que nao existem: {missingText}. Colunas encontradas na tabela: {existingText}.");
+                $"The mapping for table '{mapping.TableName}' uses columns that do not exist: {missingText}. Columns found in the table: {existingText}.");
         }
     }
 
+    // Adds one missing mapped column to the error list, unless the value is fixed text.
     private static void AddMissingMappedColumn(List<string> missingColumns, List<string> tableColumns, string fieldName, string possibleColumn)
     {
+        // Empty mapping fields are allowed.
         if (string.IsNullOrWhiteSpace(possibleColumn))
         {
             return;
@@ -117,6 +128,7 @@ public partial class KnowledgeProcessingService
 
         if (LooksLikeFixedValue(possibleColumn))
         {
+            // Fixed values are allowed and do not need to exist as table columns.
             return;
         }
 
@@ -128,6 +140,7 @@ public partial class KnowledgeProcessingService
         missingColumns.Add($"{fieldName} -> {possibleColumn}");
     }
 
+    // Adds one missing normal column to the error list.
     private static void AddMissingColumn(List<string> missingColumns, List<string> tableColumns, string columnName)
     {
         if (string.IsNullOrWhiteSpace(columnName))
@@ -141,6 +154,7 @@ public partial class KnowledgeProcessingService
         }
     }
 
+    // Returns true when the column list contains the requested column name.
     private static bool ColumnExists(List<string> tableColumns, string columnName)
     {
         foreach (string column in tableColumns)
@@ -154,6 +168,7 @@ public partial class KnowledgeProcessingService
         return false;
     }
 
+    // Returns true for fields that usually contain fixed text instead of source column names.
     private static bool IsFixedValueField(string fieldName)
     {
         return fieldName.Equals("tipo", StringComparison.OrdinalIgnoreCase)
@@ -161,12 +176,14 @@ public partial class KnowledgeProcessingService
             || fieldName.Equals("relations.targetType", StringComparison.OrdinalIgnoreCase);
     }
 
+    // Tries to detect fixed text values that are clearly not simple column names.
     private static bool LooksLikeFixedValue(string value)
     {
         return value.Contains(':', StringComparison.Ordinal)
             || value.Contains(' ', StringComparison.Ordinal);
     }
 
+    // Adds a source column to the SELECT list only if it exists and was not already added.
     private static void AddColumnIfExists(List<string> selectedColumns, List<string> tableColumns, string possibleColumn)
     {
         if (string.IsNullOrWhiteSpace(possibleColumn))

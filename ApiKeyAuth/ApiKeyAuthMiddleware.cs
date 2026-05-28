@@ -16,12 +16,14 @@ public class ApiKeyAuthMiddleware
     private readonly RequestDelegate next;
     private readonly ILogger<ApiKeyAuthMiddleware> logger;
 
+    // Receives the next middleware so this class can continue the request when the key is valid.
     public ApiKeyAuthMiddleware(RequestDelegate next, ILogger<ApiKeyAuthMiddleware> logger)
     {
         this.next = next;
         this.logger = logger;
     }
 
+    // Checks each request for the x-api-key header before allowing it to continue.
     public async Task InvokeAsync(HttpContext context)
     {
         if (IsSwaggerRequest(context))
@@ -36,7 +38,7 @@ public class ApiKeyAuthMiddleware
         {
             logger.LogError("API_KEY is not configured.");
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "API_KEY nao foi configurada no ficheiro .env." });
+            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "API_KEY is not configured in the .env file." });
             return;
         }
 
@@ -44,13 +46,14 @@ public class ApiKeyAuthMiddleware
         {
             logger.LogWarning("Request blocked because the API key is missing or invalid.");
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "x-api-key invalida ou em falta." });
+            await context.Response.WriteAsJsonAsync(new ErrorDto { Message = "x-api-key is invalid or missing." });
             return;
         }
 
         await next(context);
     }
 
+    // Allows Swagger files to load without an API key, so the documentation page opens normally.
     private static bool IsSwaggerRequest(HttpContext context)
     {
         return context.Request.Path.StartsWithSegments("/swagger");

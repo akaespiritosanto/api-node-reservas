@@ -35,6 +35,7 @@ string knowledgeConnectionString = Environment.GetEnvironmentVariable("KB_DB_CON
     ?? oldConnectionString;
 
 builder.Services.AddControllers();
+builder.Services.AddCors();
 builder.Services.AddDbContext<ReservasDbContext>(options => options.UseSqlServer(reservasConnectionString));
 builder.Services.AddDbContext<KnowledgeDbContext>(options => options.UseSqlServer(knowledgeConnectionString));
 builder.Services.AddSingleton<MappingRepository>();
@@ -79,6 +80,11 @@ var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseCors(policy => policy
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod());
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<ApiKeyAuthMiddleware>();

@@ -72,6 +72,36 @@ A `Context` is extra information connected to a `Node`.
 
 Example: reservation status, payment status or channel id.
 
+One source row can create more than one `Context` row.
+
+Example: if the `Reserva` mapping has 3 context fields:
+
+```json
+"Contexts": [
+  "estado",
+  "estado_pagamento",
+  "id_canal"
+]
+```
+
+Then each processed `Reserva` row creates 1 `Node` row and up to 3 `Context` rows.
+
+So if you process:
+
+```txt
+2 Reserva rows
+2 ProdutoReservado rows
+```
+
+and each mapping has 3 context fields, the result can be:
+
+```txt
+4 Node rows
+12 Context rows
+```
+
+This is normal. `Context` is not one row per original record. It is one row per extra value connected to a `Node`.
+
 `Arc`
 
 An `Arc` is a relation between two `Node` records.
@@ -219,8 +249,9 @@ When you process a mapping, the API:
 4. Converts each source row to a `KnowledgeRecordDto`.
 5. Saves or updates a `Node`.
 6. Removes old `Context` and `Arc` rows for that node.
-7. Adds the new `Context` and `Arc` rows.
-8. Updates the checkpoint in `Data/mapeamentos.json`.
+7. Adds the new `Context` rows based on the mapping's `Contexts` list.
+8. Adds the new `Arc` rows based on parent/relation mappings.
+9. Updates the checkpoint in `Data/mapeamentos.json`.
 
 ## Why Nothing Appears After Deleting SQL Data Manually
 
@@ -350,3 +381,15 @@ Run the API:
 ```bash
 dotnet run
 ```
+
+## Cleaning Extra Database Columns
+
+The knowledge database should only use the fields from the original SQL script.
+
+If SQL Server already has extra columns, run this script manually in SQL Server:
+
+```txt
+Data/cleanup_api_node_reservas.sql
+```
+
+That script keeps only the original columns for `Node`, `Context` and `Arc`.

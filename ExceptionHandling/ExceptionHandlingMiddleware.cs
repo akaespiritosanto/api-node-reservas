@@ -15,12 +15,14 @@ public class ExceptionHandlingMiddleware
     private readonly RequestDelegate next;
     private readonly ILogger<ExceptionHandlingMiddleware> logger;
 
+    // Receives the next middleware so requests can continue inside a try/catch block.
     public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
         this.next = next;
         this.logger = logger;
     }
 
+    // Runs the request and converts exceptions into JSON error responses.
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -35,10 +37,11 @@ public class ExceptionHandlingMiddleware
         catch (Exception exception)
         {
             logger.LogError(exception, "Unexpected error while processing the request.");
-            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Erro interno no servidor.");
+            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Internal server error.");
         }
     }
 
+    // Writes one JSON error response with the chosen HTTP status code.
     private static async Task WriteErrorAsync(HttpContext context, int statusCode, string message)
     {
         context.Response.StatusCode = statusCode;

@@ -37,20 +37,25 @@ public partial class KnowledgeProcessingService
         this.logger = logger;
     }
 
+    // Finds a mapping by id and starts the processing for that mapping.
     public async Task<ProcessingResultDto?> ProcessMappingAsync(int mappingId, int limit)
     {
+        // The controller can process a table by mapping id.
         MappingConfiguration? mapping = mappingRepository.GetById(mappingId);
 
         return await ProcessMappingAsync(mapping, limit);
     }
 
+    // Finds a mapping by table name and starts the processing for that mapping.
     public async Task<ProcessingResultDto?> ProcessMappingByTableNameAsync(string tableName, int limit)
     {
+        // Swagger can also process a table by name, for example "Reserva".
         MappingConfiguration? mapping = mappingRepository.GetByTableName(tableName);
 
         return await ProcessMappingAsync(mapping, limit);
     }
 
+    // Runs the complete processing flow after the mapping has already been found.
     private async Task<ProcessingResultDto?> ProcessMappingAsync(MappingConfiguration? mapping, int limit)
     {
         if (mapping is null)
@@ -63,8 +68,11 @@ public partial class KnowledgeProcessingService
 
         ValidateMapping(mapping);
 
+        // The rows are dictionaries because every mapping can use different column names.
         List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit);
         List<KnowledgeRecordDto> records = new List<KnowledgeRecordDto>();
+
+        // These values are returned to Swagger so the user can see what happened.
         int lastProcessedId = mapping.LastProcessedId;
         int nodesCreated = 0;
         int nodesUpdated = 0;
@@ -73,6 +81,7 @@ public partial class KnowledgeProcessingService
 
         foreach (Dictionary<string, object?> row in rows)
         {
+            // Convert the source table row into the common format used by the saving code.
             KnowledgeRecordDto record = ConvertRowToKnowledgeRecord(mapping, row);
             records.Add(record);
 
@@ -88,6 +97,7 @@ public partial class KnowledgeProcessingService
             }
         }
 
+        // The checkpoint prevents the same old rows from being processed every time.
         DateTime processingDate = DateTime.UtcNow;
         mappingRepository.UpdateProcessingState(mapping.Id, lastProcessedId, processingDate);
 

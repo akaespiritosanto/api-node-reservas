@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("api-node-reservas.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6436f18eeb7d8bed8ca0a9f2ecd28fe6b2adee14")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d1522b1c4a30e8e8fe6d2aa7064cbd5e10da81d9")]
 [assembly: System.Reflection.AssemblyProductAttribute("api-node-reservas.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("api-node-reservas.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

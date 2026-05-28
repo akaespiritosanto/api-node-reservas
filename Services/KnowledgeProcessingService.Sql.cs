@@ -15,8 +15,10 @@ public partial class KnowledgeProcessingService
      before being used, and values are sent as parameters.
     ============================================================================
     */
+    // Builds the SQL SELECT command that reads only new or updated rows.
     private static string BuildSql(MappingConfiguration mapping, List<string> tableColumns)
     {
+        // SQL names are escaped before they are placed inside the query text.
         string table = EscapeSqlName(mapping.TableName);
         string idField = EscapeSqlName(mapping.IdFieldName);
         string creationField = EscapeSqlName(mapping.CreationDateFieldName);
@@ -25,7 +27,7 @@ public partial class KnowledgeProcessingService
 
         if (selectedColumns.Count == 0)
         {
-            throw new InvalidOperationException($"O mapeamento da tabela '{mapping.TableName}' nao tem nenhuma coluna valida para selecionar.");
+            throw new InvalidOperationException($"The mapping for table '{mapping.TableName}' has no valid columns to select.");
         }
 
         List<string> escapedColumns = new List<string>();
@@ -41,21 +43,25 @@ public partial class KnowledgeProcessingService
 
         if (mapping.DetectionMethod.Equals("CreationDate", StringComparison.OrdinalIgnoreCase))
         {
+            // CreationDate mode uses dates to decide what changed.
             whereClause = $"{creationField} > @lastDate OR {updateField} > @lastDate";
         }
         else
         {
+            // Id mode uses the last processed id and also checks the update date.
             whereClause = $"{idField} > @lastId OR {updateField} > @lastDate";
         }
 
         return $"SELECT TOP (@limit) {selectClause} FROM {table} WHERE {whereClause} ORDER BY {idField}";
     }
 
+    // Checks if a table or column name is safe, then wraps it in SQL brackets.
     private static string EscapeSqlName(string name)
     {
+        // Only simple names are allowed, for example Reserva or data_actualizacao.
         if (!SafeSqlName.IsMatch(name))
         {
-            throw new InvalidOperationException($"Nome SQL invalido: {name}");
+            throw new InvalidOperationException($"Invalid SQL name: {name}");
         }
 
         return $"[{name}]";

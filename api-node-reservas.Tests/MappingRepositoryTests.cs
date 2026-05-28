@@ -9,6 +9,7 @@ namespace api_node_reservas.Tests;
 public class MappingRepositoryTests
 {
     [Fact]
+    // Checks that a new repository creates the default mapping file automatically.
     public void Constructor_Creates_Default_Mappings_File()
     {
         string folder = CreateTempFolder();
@@ -30,6 +31,7 @@ public class MappingRepositoryTests
     }
 
     [Fact]
+    // Checks that Create adds a new mapping and saves it to the JSON file.
     public void Create_Adds_New_Mapping()
     {
         string folder = CreateTempFolder();
@@ -66,6 +68,7 @@ public class MappingRepositoryTests
         }
     }
 
+    // Creates a temporary folder so each test can use an isolated mapping file.
     private static string CreateTempFolder()
     {
         string folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -75,6 +78,7 @@ public class MappingRepositoryTests
 
     private class TestEnvironment : IWebHostEnvironment
     {
+        // Creates a minimal web host environment for tests that need ContentRootPath.
         public TestEnvironment(string contentRootPath)
         {
             ContentRootPath = contentRootPath;

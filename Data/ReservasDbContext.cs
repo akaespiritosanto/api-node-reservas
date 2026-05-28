@@ -13,6 +13,7 @@ namespace api_node_reservas.Data;
 */
 public class ReservasDbContext : DbContext
 {
+    // Receives the source database configuration created in Program.cs.
     public ReservasDbContext(DbContextOptions<ReservasDbContext> options) : base(options)
     {
     }
@@ -20,6 +21,7 @@ public class ReservasDbContext : DbContext
     public DbSet<Reserva> Reservas => Set<Reserva>();
     public DbSet<ProdutoReservado> ProdutosReservados => Set<ProdutoReservado>();
 
+    // Maps the source database tables and columns that this project knows how to read.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Reserva>().ToTable("Reserva");

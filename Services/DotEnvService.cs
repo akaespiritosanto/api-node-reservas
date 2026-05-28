@@ -2,6 +2,7 @@ namespace api_node_reservas.Services;
 
 public static class DotEnvService
 {
+    // Reads a .env file and places each key=value pair into environment variables.
     public static void Load(string filePath)
     {
         if (!File.Exists(filePath))
