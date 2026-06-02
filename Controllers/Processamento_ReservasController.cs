@@ -6,27 +6,27 @@ namespace api_node_reservas.Controllers;
 
 /*
 ================================================================================
-                               Processing API
+                            Reservas processing API
 ================================================================================
- These endpoints run the conversion from source database rows to the knowledge
- database. The mapping id chooses which table and fields will be processed.
+ These endpoints run the conversion from Reservas source rows to the knowledge
+ database. The mapping id chooses which table and fields are processed.
 ================================================================================
 */
 [ApiController]
 [Route("api/processamento")]
 [Produces("application/json")]
-public class ProcessamentoController : ControllerBase
+public class Processamento_ReservasController : ControllerBase
 {
     private readonly KnowledgeProcessingService processingService;
 
     // Receives the service that does the real processing work.
-    public ProcessamentoController(KnowledgeProcessingService processingService)
+    public Processamento_ReservasController(KnowledgeProcessingService processingService)
     {
         this.processingService = processingService;
     }
 
     /// <summary>
-    /// Processa os registos novos ou atualizados para a KB.
+    /// Processes new or updated Reservas records into the knowledge database.
     /// </summary>
     [HttpPost("{mappingId:int}")]
     [ProducesResponseType(typeof(ProcessingResultDto), StatusCodes.Status200OK)]
@@ -53,7 +53,7 @@ public class ProcessamentoController : ControllerBase
     }
 
     /// <summary>
-    /// Processa os registos novos ou atualizados para a KB pelo nome da tabela.
+    /// Processes new or updated Reservas records into the knowledge database by table name.
     /// </summary>
     [HttpPost("tabela/{tableName}")]
     [ProducesResponseType(typeof(ProcessingResultDto), StatusCodes.Status200OK)]

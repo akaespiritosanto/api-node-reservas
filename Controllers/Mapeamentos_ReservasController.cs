@@ -7,27 +7,28 @@ namespace api_node_reservas.Controllers;
 
 /*
 ================================================================================
-                            Mapping configuration API
+                        Reservas mapping configuration API
 ================================================================================
  These endpoints manage the mapping definitions. A mapping is the set of rules
- that explains how one source table should be copied to the knowledge database.
+ that explains how one Reservas source table should be copied to the knowledge
+ database.
 ================================================================================
 */
 [ApiController]
 [Route("api/mapeamentos")]
 [Produces("application/json")]
-public class MapeamentosController : ControllerBase
+public class Mapeamentos_ReservasController : ControllerBase
 {
     private readonly MappingRepository repository;
 
     // Receives the repository that reads and writes the mapping JSON file.
-    public MapeamentosController(MappingRepository repository)
+    public Mapeamentos_ReservasController(MappingRepository repository)
     {
         this.repository = repository;
     }
 
     /// <summary>
-    /// Lista todas as configuracoes de mapeamento.
+    /// Lists all Reservas mapping configurations.
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(List<MappingConfiguration>), StatusCodes.Status200OK)]
@@ -39,7 +40,7 @@ public class MapeamentosController : ControllerBase
     }
 
     /// <summary>
-    /// Obtem uma configuracao de mapeamento pelo ID.
+    /// Gets one Reservas mapping configuration by id.
     /// </summary>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(MappingConfiguration), StatusCodes.Status200OK)]
@@ -59,7 +60,7 @@ public class MapeamentosController : ControllerBase
     }
 
     /// <summary>
-    /// Obtem uma configuracao de mapeamento pelo nome da tabela.
+    /// Gets one Reservas mapping configuration by table name.
     /// </summary>
     [HttpGet("tabela/{tableName}")]
     [ProducesResponseType(typeof(MappingConfiguration), StatusCodes.Status200OK)]
@@ -79,7 +80,7 @@ public class MapeamentosController : ControllerBase
     }
 
     /// <summary>
-    /// Cria uma nova configuracao de mapeamento.
+    /// Creates a new Reservas mapping configuration.
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(MappingConfiguration), StatusCodes.Status201Created)]
@@ -93,7 +94,7 @@ public class MapeamentosController : ControllerBase
     }
 
     /// <summary>
-    /// Atualiza uma configuracao de mapeamento.
+    /// Updates one Reservas mapping configuration.
     /// </summary>
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -114,7 +115,7 @@ public class MapeamentosController : ControllerBase
     }
 
     /// <summary>
-    /// Remove uma configuracao de mapeamento.
+    /// Deletes one Reservas mapping configuration.
     /// </summary>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

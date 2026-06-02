@@ -1,0 +1,81 @@
+using api_node_reservas.Models;
+using api_node_reservas.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.FileProviders;
+
+namespace api_node_reservas.Tests;
+
+public class OneNoteMappingRepositoryTests
+{
+    [Fact]
+    // Checks that OneNote mappings are created in their own JSON file.
+    public void Constructor_Creates_Default_OneNote_Mapping_File()
+    {
+        string folder = CreateTempFolder();
+
+        try
+        {
+            OneNoteMappingRepository repository = new OneNoteMappingRepository(new TestEnvironment(folder));
+
+            List<MappingConfiguration> mappings = repository.GetAll();
+
+            Assert.Single(mappings);
+            Assert.Equal("OneNotePageImport", mappings[0].TableName);
+            Assert.True(File.Exists(Path.Combine(folder, "Data", "onenote-mapeamentos.json")));
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    [Fact]
+    // Checks that the OneNote checkpoint is saved in onenote-mapeamentos.json.
+    public void UpdateProcessingState_Saves_OneNote_Checkpoint()
+    {
+        string folder = CreateTempFolder();
+
+        try
+        {
+            OneNoteMappingRepository repository = new OneNoteMappingRepository(new TestEnvironment(folder));
+            DateTime processingDate = new DateTime(2026, 6, 2, 10, 0, 0, DateTimeKind.Utc);
+
+            repository.UpdateProcessingState(1, 123, processingDate);
+
+            MappingConfiguration? mapping = repository.GetById(1);
+
+            Assert.NotNull(mapping);
+            Assert.Equal(123, mapping.LastProcessedId);
+            Assert.Equal(processingDate, mapping.LastSuccessfulProcessingDate);
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    private static string CreateTempFolder()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(folder);
+        return folder;
+    }
+
+    private class TestEnvironment : IWebHostEnvironment
+    {
+        public TestEnvironment(string contentRootPath)
+        {
+            ContentRootPath = contentRootPath;
+            WebRootPath = contentRootPath;
+            ContentRootFileProvider = new PhysicalFileProvider(contentRootPath);
+            WebRootFileProvider = new PhysicalFileProvider(contentRootPath);
+        }
+
+        public string ApplicationName { get; set; } = "Tests";
+        public IFileProvider ContentRootFileProvider { get; set; }
+        public string ContentRootPath { get; set; }
+        public string EnvironmentName { get; set; } = "Development";
+        public IFileProvider WebRootFileProvider { get; set; }
+        public string WebRootPath { get; set; }
+    }
+}

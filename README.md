@@ -9,20 +9,33 @@ The main idea is simple:
 3. The API reads new or updated rows from the source database.
 4. The API saves the converted information in the knowledge database as `Node`, `Context` and `Arc` records.
 
+The project can also import Microsoft OneNote pages:
+
+1. The user signs in with Microsoft.
+2. The API reads the user's OneNote pages through Microsoft Graph.
+3. The API saves those pages into `OneNotePageImport` in the source database.
+4. The file `Data/onenote-mapeamentos.json` explains how those imported pages become knowledge records.
+
 ## What Each Part Does
 
 `Controllers`
 
 These files expose the HTTP endpoints used by Swagger.
 
-- `MapeamentosController.cs` manages mapping configurations.
-- `ProcessamentoController.cs` runs the processing.
+- `Mapeamentos_ReservasController.cs` manages Reservas mapping configurations.
+- `Mapeamentos_OneNoteController.cs` shows OneNote mapping configurations.
+- `Processamento_ReservasController.cs` runs Reservas processing.
+- `Processamento_OneNoteController.cs` runs OneNote login, import and processing.
 
 `Services`
 
 These files contain the main project logic.
 
 - `MappingRepository.cs` reads and writes `Data/mapeamentos.json`.
+- `OneNoteMappingRepository.cs` reads and writes `Data/onenote-mapeamentos.json`.
+- `MicrosoftGraphAuthService.cs` creates the Microsoft login URL and exchanges login codes for tokens.
+- `OneNoteImportService.cs` imports OneNote pages into the source database.
+- `OneNoteTokenStore.cs` temporarily stores the Microsoft access token in memory.
 - `KnowledgeProcessingService.cs` coordinates the full processing flow.
 - `KnowledgeProcessingService.Reading.cs` reads rows from the source database.
 - `KnowledgeProcessingService.Mapping.cs` converts one database row to a DTO.
@@ -38,6 +51,7 @@ These files configure the two database connections.
 - `ReservasDbContext.cs` connects to the source reservations database.
 - `KnowledgeDbContext.cs` connects to the knowledge database.
 - `mapeamentos.json` stores the mapping configuration and the processing checkpoint.
+- `onenote-mapeamentos.json` stores the OneNote mapping configuration and its own checkpoint.
 
 `Models`
 
@@ -121,6 +135,8 @@ The checkpoint is stored in `Data/mapeamentos.json`:
 
 This prevents the API from processing the same old rows every time.
 
+For OneNote, the checkpoint is stored separately in `Data/onenote-mapeamentos.json`.
+
 ## Requirements
 
 - .NET SDK compatible with `net10.0`
@@ -141,6 +157,11 @@ API_KEY=test
 RESERVAS_DB_CONNECTION_STRING=Server=YOUR_SERVER;Database=api_aggregations;Trusted_Connection=true;TrustServerCertificate=true;
 
 KB_DB_CONNECTION_STRING=Server=YOUR_SERVER;Database=api_node_reservas;Trusted_Connection=true;TrustServerCertificate=true;
+
+AZURE_TENANT_ID=common
+AZURE_CLIENT_ID=YOUR_MICROSOFT_APP_CLIENT_ID
+AZURE_CLIENT_SECRET=YOUR_MICROSOFT_APP_CLIENT_SECRET
+AZURE_REDIRECT_URI=http://localhost:5253/api/onenote/callback
 ```
 
 `API_KEY`
@@ -154,6 +175,105 @@ Connection string for the source database.
 `KB_DB_CONNECTION_STRING`
 
 Connection string for the knowledge database.
+
+`AZURE_TENANT_ID`
+
+Microsoft tenant used for login. Use `common` for local testing with work, school or personal Microsoft accounts.
+
+`AZURE_CLIENT_ID`
+
+Application client id from the Microsoft Entra app registration.
+
+`AZURE_CLIENT_SECRET`
+
+Client secret value from the Microsoft Entra app registration. Copy the secret value when Azure shows it, because it is only shown once.
+
+`AZURE_REDIRECT_URI`
+
+The local callback endpoint Microsoft redirects to after login. For the HTTP launch profile, use:
+
+```txt
+http://localhost:5253/api/onenote/callback
+```
+
+## Microsoft Azure Setup For OneNote
+
+OneNote import uses Microsoft Graph. Microsoft Graph OneNote access needs delegated permissions, which means the user signs in and the API reads OneNote on behalf of that signed-in user.
+
+Microsoft's OneNote API documentation says app-only authentication is not supported for OneNote, so this project uses user login instead.
+
+1. Open Azure Portal:
+
+```txt
+https://portal.azure.com
+```
+
+2. Search for `Microsoft Entra ID`.
+
+3. Open:
+
+```txt
+App registrations -> New registration
+```
+
+4. Fill the app registration:
+
+```txt
+Name: api-node-reservas-onenote
+Supported account types: Accounts in any organizational directory and personal Microsoft accounts
+```
+
+5. After creating the app, copy:
+
+```txt
+Application (client) ID -> AZURE_CLIENT_ID
+Directory (tenant) ID -> AZURE_TENANT_ID
+```
+
+For local testing, `AZURE_TENANT_ID=common` is usually easier.
+
+6. Add the redirect URI:
+
+```txt
+Authentication -> Add a platform -> Web
+Redirect URI: http://localhost:5253/api/onenote/callback
+```
+
+The redirect URI in Azure must be exactly the same as `AZURE_REDIRECT_URI` in `.env`.
+
+7. Create the client secret:
+
+```txt
+Certificates & secrets -> Client secrets -> New client secret
+```
+
+Copy the secret `Value` into:
+
+```env
+AZURE_CLIENT_SECRET=YOUR_SECRET_VALUE
+```
+
+8. Add Microsoft Graph delegated permissions:
+
+```txt
+API permissions -> Add a permission -> Microsoft Graph -> Delegated permissions
+```
+
+Add:
+
+```txt
+User.Read
+Notes.Read
+offline_access
+```
+
+`Notes.Read` allows the app to read OneNote notebooks on behalf of the signed-in user.
+
+Official Microsoft documentation:
+
+- Register an application: https://learn.microsoft.com/en-us/graph/auth-register-app-v2
+- OneNote API overview: https://learn.microsoft.com/en-us/graph/api/resources/onenote-api-overview
+- Graph permissions reference: https://learn.microsoft.com/en-us/graph/permissions-reference
 
 ## How To Run
 
@@ -189,7 +309,18 @@ The API expects this header:
 x-api-key: test
 ```
 
+The Microsoft callback endpoint does not need the API key because Microsoft redirects the browser there after login.
+
 ## Main Endpoints
+
+Swagger is organized into four sections:
+
+- `Mapeamentos_Reservas`
+- `Mapeamentos_OneNote`
+- `Processamento_Reservas`
+- `Processamento_OneNote`
+
+### Reservas Endpoints
 
 List all mappings:
 
@@ -219,6 +350,58 @@ Process by table name:
 
 ```txt
 POST /api/processamento/tabela/Reserva?limit=100
+```
+
+### OneNote Endpoints
+
+The OneNote flow in Swagger is ordered like the real import flow.
+
+Create the Microsoft login URL:
+
+```txt
+GET /api/onenote/login-url
+```
+
+Microsoft redirects here after login:
+
+```txt
+GET /api/onenote/callback
+```
+
+Check if the API has a temporary Microsoft token:
+
+```txt
+GET /api/onenote/token-status
+```
+
+Optional manual token exchange:
+
+```txt
+POST /api/onenote/token
+```
+
+Import OneNote pages into the source database:
+
+```txt
+POST /api/onenote/import
+```
+
+List OneNote mappings:
+
+```txt
+GET /api/onenote/mapeamentos
+```
+
+Process imported OneNote pages into the knowledge database:
+
+```txt
+POST /api/onenote/processamento/1?limit=100
+```
+
+Process imported OneNote pages by table name:
+
+```txt
+POST /api/onenote/processamento/tabela/OneNotePageImport?limit=100
 ```
 
 ## Correct Processing Order

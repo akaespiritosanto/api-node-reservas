@@ -20,6 +20,7 @@ public class ReservasDbContext : DbContext
 
     public DbSet<Reserva> Reservas => Set<Reserva>();
     public DbSet<ProdutoReservado> ProdutosReservados => Set<ProdutoReservado>();
+    public DbSet<OneNotePageImport> OneNotePageImports => Set<OneNotePageImport>();
 
     // Maps the source database tables and columns that this project knows how to read.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,5 +46,20 @@ public class ReservasDbContext : DbContext
         modelBuilder.Entity<ProdutoReservado>().Property(produto => produto.DataFim).HasColumnName("DataFim");
         modelBuilder.Entity<ProdutoReservado>().Property(produto => produto.DataCriacao).HasColumnName("data_criacao");
         modelBuilder.Entity<ProdutoReservado>().Property(produto => produto.DataActualizacao).HasColumnName("data_actualizacao");
+
+        modelBuilder.Entity<OneNotePageImport>().ToTable("OneNotePageImport");
+        modelBuilder.Entity<OneNotePageImport>().HasKey(page => page.Id);
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.Id).HasColumnName("id");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.GraphPageId).HasColumnName("graphPageId").HasColumnType("nvarchar(200)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.UserId).HasColumnName("userId").HasColumnType("nvarchar(200)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.NotebookName).HasColumnName("notebookName").HasColumnType("nvarchar(500)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.SectionName).HasColumnName("sectionName").HasColumnType("nvarchar(500)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.PageTitle).HasColumnName("pageTitle").HasColumnType("nvarchar(1000)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.ContentText).HasColumnName("contentText").HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.ContentHtml).HasColumnName("contentHtml").HasColumnType("nvarchar(max)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.CreatedDateTime).HasColumnName("createdDateTime");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.LastModifiedDateTime).HasColumnName("lastModifiedDateTime");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.WebUrl).HasColumnName("webUrl").HasColumnType("nvarchar(1000)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.ImportedAt).HasColumnName("importedAt");
     }
 }

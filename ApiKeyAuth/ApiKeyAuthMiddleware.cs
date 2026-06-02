@@ -26,7 +26,7 @@ public class ApiKeyAuthMiddleware
     // Checks each request for the x-api-key header before allowing it to continue.
     public async Task InvokeAsync(HttpContext context)
     {
-        if (IsSwaggerRequest(context))
+        if (IsSwaggerRequest(context) || IsOneNoteCallbackRequest(context))
         {
             await next(context);
             return;
@@ -57,5 +57,11 @@ public class ApiKeyAuthMiddleware
     private static bool IsSwaggerRequest(HttpContext context)
     {
         return context.Request.Path.StartsWithSegments("/swagger");
+    }
+
+    // Microsoft redirects the user here after login, so this path cannot send x-api-key.
+    private static bool IsOneNoteCallbackRequest(HttpContext context)
+    {
+        return context.Request.Path.StartsWithSegments("/api/onenote/callback");
     }
 }

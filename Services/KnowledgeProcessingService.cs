@@ -23,17 +23,20 @@ public partial class KnowledgeProcessingService
     private readonly ReservasDbContext reservasDbContext;
     private readonly KnowledgeDbContext knowledgeDbContext;
     private readonly MappingRepository mappingRepository;
+    private readonly OneNoteMappingRepository oneNoteMappingRepository;
     private readonly ILogger<KnowledgeProcessingService> logger;
 
     public KnowledgeProcessingService(
         ReservasDbContext reservasDbContext,
         KnowledgeDbContext knowledgeDbContext,
         MappingRepository mappingRepository,
+        OneNoteMappingRepository oneNoteMappingRepository,
         ILogger<KnowledgeProcessingService> logger)
     {
         this.reservasDbContext = reservasDbContext;
         this.knowledgeDbContext = knowledgeDbContext;
         this.mappingRepository = mappingRepository;
+        this.oneNoteMappingRepository = oneNoteMappingRepository;
         this.logger = logger;
     }
 
@@ -55,8 +58,30 @@ public partial class KnowledgeProcessingService
         return await ProcessMappingAsync(mapping, limit);
     }
 
+    public async Task<ProcessingResultDto?> ProcessOneNoteMappingAsync(int mappingId, int limit)
+    {
+        MappingConfiguration? mapping = oneNoteMappingRepository.GetById(mappingId);
+
+        return await ProcessMappingAsync(mapping, limit, oneNoteMappingRepository);
+    }
+
+    public async Task<ProcessingResultDto?> ProcessOneNoteMappingByTableNameAsync(string tableName, int limit)
+    {
+        MappingConfiguration? mapping = oneNoteMappingRepository.GetByTableName(tableName);
+
+        return await ProcessMappingAsync(mapping, limit, oneNoteMappingRepository);
+    }
+
     // Runs the complete processing flow after the mapping has already been found.
     private async Task<ProcessingResultDto?> ProcessMappingAsync(MappingConfiguration? mapping, int limit)
+    {
+        return await ProcessMappingAsync(mapping, limit, mappingRepository);
+    }
+
+    private async Task<ProcessingResultDto?> ProcessMappingAsync(
+        MappingConfiguration? mapping,
+        int limit,
+        object processingStateRepository)
     {
         if (mapping is null)
         {
@@ -99,7 +124,7 @@ public partial class KnowledgeProcessingService
 
         // The checkpoint prevents the same old rows from being processed every time.
         DateTime processingDate = DateTime.UtcNow;
-        mappingRepository.UpdateProcessingState(mapping.Id, lastProcessedId, processingDate);
+        UpdateProcessingState(processingStateRepository, mapping.Id, lastProcessedId, processingDate);
 
         logger.LogInformation("Finished mapping {MappingId}. Processed {RecordCount} records.", mapping.Id, records.Count);
 
@@ -116,6 +141,20 @@ public partial class KnowledgeProcessingService
             ProcessingDate = processingDate,
             Records = records
         };
+    }
+
+    private static void UpdateProcessingState(object repository, int mappingId, int lastProcessedId, DateTime processingDate)
+    {
+        if (repository is OneNoteMappingRepository oneNoteRepository)
+        {
+            oneNoteRepository.UpdateProcessingState(mappingId, lastProcessedId, processingDate);
+            return;
+        }
+
+        if (repository is MappingRepository normalRepository)
+        {
+            normalRepository.UpdateProcessingState(mappingId, lastProcessedId, processingDate);
+        }
     }
 
     private class SaveResult
