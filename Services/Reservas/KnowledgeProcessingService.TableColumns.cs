@@ -53,6 +53,14 @@ public partial class KnowledgeProcessingService
         AddMissingMappedColumn(missingColumns, tableColumns, "par5", mapping.Mapping.Par5);
         AddMissingMappedColumn(missingColumns, tableColumns, "par6", mapping.Mapping.Par6);
         AddMissingMappedColumn(missingColumns, tableColumns, "par7", mapping.Mapping.Par7);
+        AddMissingMappedColumn(missingColumns, tableColumns, "link", mapping.Mapping.Link);
+        AddMissingMappedColumn(missingColumns, tableColumns, "externalId", mapping.Mapping.ExternalId);
+        AddMissingMappedColumn(missingColumns, tableColumns, "security", mapping.Mapping.Security);
+        AddMissingMappedColumn(missingColumns, tableColumns, "updateUser", mapping.Mapping.UpdateUser);
+        AddMissingMappedColumn(missingColumns, tableColumns, "descriptionType", mapping.Mapping.DescriptionType);
+        AddMissingMappedColumn(missingColumns, tableColumns, "context.par1", mapping.Mapping.ContextPar1);
+        AddMissingMappedColumn(missingColumns, tableColumns, "context.descriptionType", mapping.Mapping.ContextDescriptionType);
+        AddMissingMappedColumn(missingColumns, tableColumns, "parentType", mapping.Mapping.ParentType);
     }
 
     // Checks mapped relation columns.
@@ -60,6 +68,7 @@ public partial class KnowledgeProcessingService
     {
         foreach (KbRelationMapping relation in mapping.Mapping.Relations)
         {
+            AddMissingMappedColumn(missingColumns, tableColumns, "relations.typeId", relation.TypeId);
             AddMissingMappedColumn(missingColumns, tableColumns, "relations.targetId", relation.TargetId);
             AddMissingMappedColumn(missingColumns, tableColumns, "relations.targetType", relation.TargetType);
         }
@@ -135,6 +144,13 @@ public partial class KnowledgeProcessingService
     {
         return fieldName.Equals("tipo", StringComparison.OrdinalIgnoreCase)
             || fieldName.Equals("tipoE", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("security", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("updateUser", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("descriptionType", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("context.par1", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("context.descriptionType", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("parentType", StringComparison.OrdinalIgnoreCase)
+            || fieldName.Equals("relations.typeId", StringComparison.OrdinalIgnoreCase)
             || fieldName.Equals("relations.targetType", StringComparison.OrdinalIgnoreCase);
     }
 

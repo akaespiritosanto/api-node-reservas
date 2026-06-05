@@ -101,7 +101,10 @@ Example: one reservation can become one `Node`.
 
 `Context`
 
-A `Context` is extra information connected to a `Node`.
+A `Context` can be used in two ways:
+
+1. As extra information connected to a `Node`.
+2. As a tree position that says one `Node` is inside another `Node`.
 
 Example: reservation status, payment status or channel id.
 
@@ -134,6 +137,24 @@ and each mapping has 3 context fields, the result can be:
 ```
 
 This is normal. `Context` is not one row per original record. It is one row per extra value connected to a `Node`.
+
+For trees, the API uses the `parent` field in the `Context` table.
+
+Example: a product inside a category:
+
+1. The category has its own `Node`.
+2. The API creates a root `Context` for that category with `parent = 0` and `nodeId = category Node id`.
+3. The product has its own `Node`.
+4. The API creates a child `Context` for that product with `parent = category Context id` and `nodeId = product Node id`.
+
+In the mapping file, use `Parent` for the source column that contains the parent id and `ParentType` for the parent Node type:
+
+```json
+"ParentType": "Reserva",
+"Parent": [
+  "id_reserva"
+]
+```
 
 `Arc`
 

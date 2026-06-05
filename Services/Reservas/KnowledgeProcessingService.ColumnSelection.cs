@@ -47,6 +47,14 @@ public partial class KnowledgeProcessingService
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Par5);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Par6);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Par7);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Link);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.ExternalId);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.Security);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.UpdateUser);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.DescriptionType);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.ContextPar1);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.ContextDescriptionType);
+        AddColumnIfExists(selectedColumns, tableColumns, mapping.Mapping.ParentType);
     }
 
     // Adds the mapped columns that become Context rows.
@@ -72,6 +80,7 @@ public partial class KnowledgeProcessingService
     {
         foreach (KbRelationMapping relation in mapping.Mapping.Relations)
         {
+            AddColumnIfExists(selectedColumns, tableColumns, relation.TypeId);
             AddColumnIfExists(selectedColumns, tableColumns, relation.TargetId);
             AddColumnIfExists(selectedColumns, tableColumns, relation.TargetType);
         }

@@ -7,7 +7,7 @@
     "CreationDateFieldName": "data_pedido",
     "UpdateDateFieldName": "data_actualizacao",
     "LastProcessedId": 9,
-    "LastSuccessfulProcessingDate": "2026-05-28T11:42:26.2734909Z",
+    "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "Reserva",
       "Tipo": "Reserva",
@@ -22,6 +22,13 @@
       "Par5": "",
       "Par6": "",
       "Par7": "",
+      "Link": "",
+      "Security": "0",
+      "UpdateUser": "0",
+      "DescriptionType": "",
+      "ContextPar1": "",
+      "ContextDescriptionType": "",
+      "ParentType": "",
       "Contexts": [
         "estado",
         "estado_pagamento",
@@ -39,7 +46,7 @@
     "CreationDateFieldName": "data_criacao",
     "UpdateDateFieldName": "data_actualizacao",
     "LastProcessedId": 18,
-    "LastSuccessfulProcessingDate": "2026-05-28T11:42:39.8205325Z",
+    "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "ProdutoReservado",
       "Tipo": "ProdutoReservado",
@@ -54,14 +61,24 @@
       "Par5": "DataFim",
       "Par6": "",
       "Par7": "",
+      "Link": "",
+      "Security": "0",
+      "UpdateUser": "0",
+      "DescriptionType": "",
+      "ContextPar1": "",
+      "ContextDescriptionType": "",
+      "ParentType": "Reserva",
       "Contexts": [
         "estado",
         "quantidade",
         "id_entidade"
       ],
-      "Parent": [],
+      "Parent": [
+        "id_reserva"
+      ],
       "Relations": [
         {
+          "TypeId": "0",
           "Type": "pertence_a_reserva",
           "TargetId": "id_reserva",
           "TargetType": "Reserva"

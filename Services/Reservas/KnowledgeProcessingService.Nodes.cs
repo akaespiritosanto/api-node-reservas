@@ -61,10 +61,17 @@ public partial class KnowledgeProcessingService
         node.Par5 = LimitText(record.Par5, 200);
         node.Par6 = LimitText(record.Par6, 200);
         node.Par7 = LimitText(record.Par7, 200);
-        node.Link = string.Empty;
-        node.Security = 0;
+        node.Link = LimitText(record.Link, 500);
+        node.ExternalId = LimitText(record.ExternalId, 200);
+        node.Security = ToInt(record.Security);
         node.UpdateDate = updateDate;
-        node.UpdateUser = 0;
-        node.DescriptionType = null;
+        node.UpdateUser = ToInt(record.UpdateUser);
+        node.DescriptionType = LimitNullableText(record.DescriptionType, 10);
+    }
+
+    private static string? LimitNullableText(string text, int maxLength)
+    {
+        string limitedText = LimitText(text, maxLength);
+        return string.IsNullOrWhiteSpace(limitedText) ? null : limitedText;
     }
 }

@@ -39,6 +39,7 @@ public partial class KnowledgeProcessingService
         {
             KnowledgeRelationDto relationDto = new KnowledgeRelationDto
             {
+                TypeId = GetMappedValue(row, relation.TypeId),
                 Type = relation.Type,
                 TargetId = GetMappedValue(row, relation.TargetId),
                 TargetType = GetMappedValue(row, relation.TargetType)
@@ -63,6 +64,14 @@ public partial class KnowledgeProcessingService
             Par5 = GetMappedValue(row, mapping.Mapping.Par5),
             Par6 = GetMappedValue(row, mapping.Mapping.Par6),
             Par7 = GetMappedValue(row, mapping.Mapping.Par7),
+            Link = GetMappedValue(row, mapping.Mapping.Link),
+            ExternalId = GetMappedValue(row, mapping.Mapping.ExternalId),
+            Security = GetMappedValue(row, mapping.Mapping.Security),
+            UpdateUser = GetMappedValue(row, mapping.Mapping.UpdateUser),
+            DescriptionType = GetMappedValue(row, mapping.Mapping.DescriptionType),
+            ContextPar1 = GetMappedValue(row, mapping.Mapping.ContextPar1),
+            ContextDescriptionType = GetMappedValue(row, mapping.Mapping.ContextDescriptionType),
+            ParentType = GetMappedValue(row, mapping.Mapping.ParentType),
             Contexts = contexts,
             Parent = parents,
             Relations = relations

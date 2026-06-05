@@ -22,6 +22,12 @@ public class OneNoteMappingRepositoryTests
 
             Assert.Single(mappings);
             Assert.Equal("OneNotePageImport", mappings[0].TableName);
+            Assert.Equal("pageTitle", mappings[0].Mapping.Reference);
+            Assert.Equal("contentText", mappings[0].Mapping.Descricao);
+            Assert.Equal("notebookName", mappings[0].Mapping.Par1);
+            Assert.Equal("sectionName", mappings[0].Mapping.Par2);
+            Assert.Equal("webUrl", mappings[0].Mapping.Link);
+            Assert.Equal("graphPageId", mappings[0].Mapping.ExternalId);
             Assert.True(File.Exists(Path.Combine(folder, "Data", "onenote-mapeamentos.json")));
         }
         finally

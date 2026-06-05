@@ -15,6 +15,14 @@ public class KbMapping
     public string Par5 { get; set; } = string.Empty;
     public string Par6 { get; set; } = string.Empty;
     public string Par7 { get; set; } = string.Empty;
+    public string Link { get; set; } = string.Empty;
+    public string ExternalId { get; set; } = string.Empty;
+    public string Security { get; set; } = string.Empty;
+    public string UpdateUser { get; set; } = string.Empty;
+    public string DescriptionType { get; set; } = string.Empty;
+    public string ContextPar1 { get; set; } = string.Empty;
+    public string ContextDescriptionType { get; set; } = string.Empty;
+    public string ParentType { get; set; } = string.Empty;
     public List<string> Contexts { get; set; } = new List<string>();
     public List<string> Parent { get; set; } = new List<string>();
     public List<KbRelationMapping> Relations { get; set; } = new List<KbRelationMapping>();

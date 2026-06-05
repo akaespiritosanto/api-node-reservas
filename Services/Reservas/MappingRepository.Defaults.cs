@@ -53,6 +53,13 @@ public partial class MappingRepository
                 Par1 = "numero",
                 Par2 = "referencia",
                 Par3 = "nome_utilizador_confirmacao",
+                Link = "",
+                Security = "0",
+                UpdateUser = "0",
+                DescriptionType = "",
+                ContextPar1 = "",
+                ContextDescriptionType = "",
+                ParentType = "",
                 Contexts = new List<string>
                 {
                     "estado",
@@ -87,16 +94,28 @@ public partial class MappingRepository
                 Par3 = "referencia",
                 Par4 = "DataInicio",
                 Par5 = "DataFim",
+                Link = "",
+                Security = "0",
+                UpdateUser = "0",
+                DescriptionType = "",
+                ContextPar1 = "",
+                ContextDescriptionType = "",
+                ParentType = "Reserva",
                 Contexts = new List<string>
                 {
                     "estado",
                     "quantidade",
                     "id_entidade"
                 },
+                Parent = new List<string>
+                {
+                    "id_reserva"
+                },
                 Relations = new List<KbRelationMapping>
                 {
                     new KbRelationMapping
                     {
+                        TypeId = "0",
                         Type = "pertence_a_reserva",
                         TargetId = "id_reserva",
                         TargetType = "Reserva"

@@ -15,6 +15,7 @@ public class Node
     public string? Par6 { get; set; }
     public string? Par7 { get; set; }
     public string Link { get; set; } = string.Empty;
+    public string ExternalId { get; set; } = string.Empty;
     public int Security { get; set; }
     public DateTime UpdateDate { get; set; }
     public int UpdateUser { get; set; }

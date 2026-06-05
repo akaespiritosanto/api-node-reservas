@@ -21,19 +21,20 @@ public partial class KnowledgeProcessingService
         // Parent values are saved as "parent" relations.
         foreach (string parent in record.Parent)
         {
-            await AddArcAsync(node, "parent", parent, record.TipoE, updateDate, result);
+            await AddArcAsync(node, string.Empty, "parent", parent, record.ParentType, updateDate, result);
         }
 
         // Custom relation mappings are saved with the relation type from the mapping file.
         foreach (KnowledgeRelationDto relation in record.Relations)
         {
-            await AddArcAsync(node, relation.Type, relation.TargetId, relation.TargetType, updateDate, result);
+            await AddArcAsync(node, relation.TypeId, relation.Type, relation.TargetId, relation.TargetType, updateDate, result);
         }
     }
 
     // Creates one Arc row if the target Node can be found safely.
     private async Task AddArcAsync(
         Node node,
+        string relationTypeIdText,
         string relationType,
         string targetIdText,
         string targetType,
@@ -64,7 +65,7 @@ public partial class KnowledgeProcessingService
         {
             Source = node.Id,
             Target = targetNodeId.Value,
-            TypeId = 0,
+            TypeId = ToInt(relationTypeIdText),
             Type = LimitText(relationType, 50),
             UpdateDate = updateDate
         });

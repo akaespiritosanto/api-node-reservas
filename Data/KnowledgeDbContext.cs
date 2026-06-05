@@ -41,6 +41,7 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<Node>().Property(node => node.Par6).HasColumnName("par6").HasColumnType("varchar(200)");
         modelBuilder.Entity<Node>().Property(node => node.Par7).HasColumnName("par7").HasColumnType("varchar(200)");
         modelBuilder.Entity<Node>().Property(node => node.Link).HasColumnName("link").HasColumnType("varchar(500)");
+        modelBuilder.Entity<Node>().Property(node => node.ExternalId).HasColumnName("externalId").HasColumnType("varchar(200)");
         modelBuilder.Entity<Node>().Property(node => node.Security).HasColumnName("security");
         modelBuilder.Entity<Node>().Property(node => node.UpdateDate).HasColumnName("updateDate").HasColumnType("datetime");
         modelBuilder.Entity<Node>().Property(node => node.UpdateUser).HasColumnName("updateUser");
@@ -50,6 +51,7 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<Context>().HasKey(context => context.Id);
         modelBuilder.Entity<Context>().Property(context => context.Id).HasColumnName("id");
         modelBuilder.Entity<Context>().Property(context => context.Description).HasColumnName("description").HasColumnType("varchar(8000)");
+        modelBuilder.Entity<Context>().Property(context => context.Parent).HasColumnName("parent");
         modelBuilder.Entity<Context>().Property(context => context.Location).HasColumnName("location");
         modelBuilder.Entity<Context>().Property(context => context.NodeId).HasColumnName("nodeId");
         modelBuilder.Entity<Context>().Property(context => context.Par1).HasColumnName("par1").HasColumnType("varchar(200)");
