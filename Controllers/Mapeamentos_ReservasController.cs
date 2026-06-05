@@ -33,7 +33,7 @@ public class Mapeamentos_ReservasController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(List<MappingConfiguration>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
-    // Returns every mapping saved in Data/mapeamentos.json.
+    // Returns every mapping saved in Data/reservas-mapeamentos.json.
     public ActionResult<List<MappingConfiguration>> GetAll()
     {
         return Ok(repository.GetAll());

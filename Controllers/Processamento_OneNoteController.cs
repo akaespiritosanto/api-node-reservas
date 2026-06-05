@@ -53,16 +53,18 @@ public class Processamento_OneNoteController : ControllerBase
     /// Receives the Microsoft login result and stores the OneNote access token temporarily.
     /// </summary>
     [HttpGet("callback")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
-    [Produces("text/html")]
-    // Step 2: Microsoft redirects here after login. This endpoint stores the token.
-    public async Task<IActionResult> LoginCallback([FromQuery] string code = "", [FromQuery] string error = "")
+    // Step 2: Microsoft redirects here after login. This endpoint stores the token and returns to Swagger.
+    public async Task<IActionResult> LoginCallback()
     {
+        string code = Request.Query["code"].ToString();
+        string error = Request.Query["error"].ToString();
+
         if (!string.IsNullOrWhiteSpace(error))
         {
-            return Content($"<html><body><h1>Microsoft login failed</h1><p>{error}</p></body></html>", "text/html");
+            return Redirect($"/swagger?onenoteLogin=failed&message={Uri.EscapeDataString(error)}");
         }
 
         if (string.IsNullOrWhiteSpace(code))
@@ -73,16 +75,7 @@ public class Processamento_OneNoteController : ControllerBase
         OneNoteTokenDto token = await authService.ExchangeCodeForTokenAsync(code, string.Empty);
         tokenStore.SaveToken(token.AccessToken, token.ExpiresIn);
 
-        string html = @"
-<html>
-    <body>
-        <h1>OneNote login completed</h1>
-        <p>The access token was saved temporarily in this API process.</p>
-        <p>You can go back to Swagger and call POST /api/onenote/import without copying the code.</p>
-    </body>
-</html>";
-
-        return Content(html, "text/html");
+        return Redirect("/swagger?onenoteLogin=success");
     }
 
     /// <summary>
@@ -102,27 +95,6 @@ public class Processamento_OneNoteController : ControllerBase
             HasAccessToken = !string.IsNullOrWhiteSpace(accessToken),
             ExpiresAtUtc = tokenStore.GetExpirationDate()
         });
-    }
-
-    /// <summary>
-    /// Exchanges a Microsoft authorization code for an access token.
-    /// </summary>
-    [HttpPost("token")]
-    [ProducesResponseType(typeof(OneNoteTokenDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
-    // Optional step: manually exchanges a code for a token if the callback was not used.
-    public async Task<ActionResult<OneNoteTokenDto>> ExchangeCodeForToken(OneNoteImportRequestDto request)
-    {
-        if (string.IsNullOrWhiteSpace(request.AuthorizationCode))
-        {
-            return BadRequest(new ErrorDto { Message = "AuthorizationCode is required." });
-        }
-
-        OneNoteTokenDto token = await authService.ExchangeCodeForTokenAsync(request.AuthorizationCode, request.RedirectUri);
-        tokenStore.SaveToken(token.AccessToken, token.ExpiresIn);
-        return Ok(token);
     }
 
     /// <summary>

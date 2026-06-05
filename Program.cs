@@ -2,6 +2,7 @@ using api_node_reservas.ApiKeyAuth;
 using api_node_reservas.Data;
 using api_node_reservas.ExceptionHandling;
 using api_node_reservas.Services;
+using api_node_reservas.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Reflection;
@@ -51,7 +52,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Reservas Knowledge Base API",
         Version = "v1",
-        Description = "API for mapping Reservas and OneNote source data into the knowledge database."
+        Description = "API for mapping Reservas and OneNote source data into the knowledge database. The Swagger order follows the beginner flow: mappings first, then login/import, then processing."
     });
 
     string xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
@@ -73,9 +74,12 @@ builder.Services.AddSwaggerGen(options =>
 
     options.OrderActionsBy(apiDescription =>
     {
-        string? controller = apiDescription.ActionDescriptor.RouteValues["controller"];
-        int order = GetSwaggerOrder(controller, apiDescription.RelativePath);
-        return $"{controller}_{order:000}";
+        return SwaggerEndpointOrder.GetActionOrder(apiDescription);
+    });
+
+    options.TagActionsBy(apiDescription =>
+    {
+        return new[] { SwaggerEndpointOrder.GetTag(apiDescription) };
     });
 
     options.AddSecurityRequirement(openApiDocument => new OpenApiSecurityRequirement
@@ -105,63 +109,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-static int GetSwaggerOrder(string? controller, string? path)
-{
-    string endpointPath = path ?? string.Empty;
-
-    if (controller == "Processamento_OneNote")
-    {
-        if (endpointPath.EndsWith("login-url", StringComparison.OrdinalIgnoreCase))
-        {
-            return 10;
-        }
-
-        if (endpointPath.EndsWith("callback", StringComparison.OrdinalIgnoreCase))
-        {
-            return 20;
-        }
-
-        if (endpointPath.EndsWith("token-status", StringComparison.OrdinalIgnoreCase))
-        {
-            return 30;
-        }
-
-        if (endpointPath.EndsWith("token", StringComparison.OrdinalIgnoreCase))
-        {
-            return 40;
-        }
-
-        if (endpointPath.EndsWith("import", StringComparison.OrdinalIgnoreCase))
-        {
-            return 50;
-        }
-
-        if (endpointPath.Contains("processamento/tabela", StringComparison.OrdinalIgnoreCase))
-        {
-            return 70;
-        }
-
-        if (endpointPath.Contains("processamento", StringComparison.OrdinalIgnoreCase))
-        {
-            return 60;
-        }
-    }
-
-    if (controller == "Mapeamentos_OneNote")
-    {
-        if (endpointPath.Equals("api/onenote/mapeamentos", StringComparison.OrdinalIgnoreCase))
-        {
-            return 10;
-        }
-
-        if (endpointPath.Contains("tabela", StringComparison.OrdinalIgnoreCase))
-        {
-            return 30;
-        }
-
-        return 20;
-    }
-
-    return 100;
-}

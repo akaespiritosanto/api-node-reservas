@@ -5,7 +5,7 @@ This project is an ASP.NET Core API that copies information from a reservations 
 The main idea is simple:
 
 1. The source database has normal business tables, like `Reserva` and `ProdutoReservado`.
-2. The file `Data/mapeamentos.json` explains how each source table should be converted.
+2. The file `Data/reservas-mapeamentos.json` explains how each source table should be converted.
 3. The API reads new or updated rows from the source database.
 4. The API saves the converted information in the knowledge database as `Node`, `Context` and `Arc` records.
 
@@ -23,7 +23,7 @@ The project can also import Microsoft OneNote pages:
 These files expose the HTTP endpoints used by Swagger.
 
 - `Mapeamentos_ReservasController.cs` manages Reservas mapping configurations.
-- `Mapeamentos_OneNoteController.cs` shows OneNote mapping configurations.
+- `Mapeamentos_OneNoteController.cs` manages OneNote mapping configurations.
 - `Processamento_ReservasController.cs` runs Reservas processing.
 - `Processamento_OneNoteController.cs` runs OneNote login, import and processing.
 
@@ -31,18 +31,37 @@ These files expose the HTTP endpoints used by Swagger.
 
 These files contain the main project logic.
 
-- `MappingRepository.cs` reads and writes `Data/mapeamentos.json`.
-- `OneNoteMappingRepository.cs` reads and writes `Data/onenote-mapeamentos.json`.
-- `MicrosoftGraphAuthService.cs` creates the Microsoft login URL and exchanges login codes for tokens.
-- `OneNoteImportService.cs` imports OneNote pages into the source database.
-- `OneNoteTokenStore.cs` temporarily stores the Microsoft access token in memory.
-- `KnowledgeProcessingService.cs` coordinates the full processing flow.
-- `KnowledgeProcessingService.Reading.cs` reads rows from the source database.
-- `KnowledgeProcessingService.Mapping.cs` converts one database row to a DTO.
-- `KnowledgeProcessingService.Saving.cs` saves data into the knowledge database.
-- `KnowledgeProcessingService.Sql.cs` builds the SQL query used to read source rows.
-- `KnowledgeProcessingService.Validation.cs` checks if the mapping is valid.
+- `Reservas/MappingRepository.cs` reads and writes `Data/reservas-mapeamentos.json`.
+- `Reservas/MappingRepository.Helpers.cs` contains small helper methods used by `MappingRepository.cs`.
+- `Reservas/MappingRepository.Defaults.cs` contains the default Reservas mappings created on first run.
+- `Reservas/KnowledgeProcessingService.cs` coordinates the full processing flow.
+- `Reservas/KnowledgeProcessingService.Reading.cs` reads rows from the source database.
+- `Reservas/KnowledgeProcessingService.Mapping.cs` converts one database row to a DTO.
+- `Reservas/KnowledgeProcessingService.Saving.cs` coordinates saving one converted record.
+- `Reservas/KnowledgeProcessingService.Nodes.cs` saves the main `Node` record.
+- `Reservas/KnowledgeProcessingService.Contexts.cs` saves extra `Context` rows.
+- `Reservas/KnowledgeProcessingService.Arcs.cs` saves relation `Arc` rows.
+- `Reservas/KnowledgeProcessingService.Sql.cs` builds the SQL query used to read source rows.
+- `Reservas/KnowledgeProcessingService.Validation.cs` checks the basic mapping safety rules.
+- `Reservas/KnowledgeProcessingService.ColumnSelection.cs` chooses which source columns SQL should read.
+- `Reservas/KnowledgeProcessingService.TableColumns.cs` checks if mapped columns exist in the source table.
+- `OneNote/OneNoteMappingRepository.cs` reads and writes `Data/onenote-mapeamentos.json`.
+- `OneNote/OneNoteMappingRepository.Helpers.cs` contains small helper methods used by `OneNoteMappingRepository.cs`.
+- `OneNote/OneNoteMappingRepository.Defaults.cs` contains the default OneNote mapping created on first run.
+- `OneNote/MicrosoftGraphAuthService.cs` creates the Microsoft login URL and exchanges login codes for tokens.
+- `OneNote/OneNoteImportService.cs` coordinates the OneNote import flow.
+- `OneNote/OneNoteImportService.Graph.cs` reads the user and pages from Microsoft Graph.
+- `OneNote/OneNoteImportService.Database.cs` creates and writes the `OneNotePageImport` table.
+- `OneNote/OneNoteImportService.Json.cs` reads Graph JSON and converts OneNote HTML to text.
+- `OneNote/OneNoteImportService.PageData.cs` stores one imported page while the import is running.
+- `OneNote/OneNoteTokenStore.cs` temporarily stores the Microsoft access token in memory.
 - `DotEnvService.cs` loads values from the `.env` file.
+
+`Swagger`
+
+These files only affect the documentation page.
+
+- `SwaggerEndpointOrder.cs` keeps Swagger sections and endpoints in beginner-friendly order.
 
 `Data`
 
@@ -50,7 +69,7 @@ These files configure the two database connections.
 
 - `ReservasDbContext.cs` connects to the source reservations database.
 - `KnowledgeDbContext.cs` connects to the knowledge database.
-- `mapeamentos.json` stores the mapping configuration and the processing checkpoint.
+- `reservas-mapeamentos.json` stores the Reservas mapping configuration and the processing checkpoint.
 - `onenote-mapeamentos.json` stores the OneNote mapping configuration and its own checkpoint.
 
 `Models`
@@ -126,7 +145,7 @@ Example: a reserved product can point to the reservation it belongs to.
 
 A checkpoint tells the API what was already processed.
 
-The checkpoint is stored in `Data/mapeamentos.json`:
+The checkpoint is stored in `Data/reservas-mapeamentos.json`:
 
 ```json
 "LastProcessedId": 9,
@@ -374,22 +393,36 @@ Check if the API has a temporary Microsoft token:
 GET /api/onenote/token-status
 ```
 
-Optional manual token exchange:
-
-```txt
-POST /api/onenote/token
-```
-
 Import OneNote pages into the source database:
 
 ```txt
 POST /api/onenote/import
 ```
 
+Create, update or delete custom OneNote mappings the same way as Reservas mappings.
+
 List OneNote mappings:
 
 ```txt
 GET /api/onenote/mapeamentos
+```
+
+Create a OneNote mapping:
+
+```txt
+POST /api/onenote/mapeamentos
+```
+
+Update a OneNote mapping:
+
+```txt
+PUT /api/onenote/mapeamentos/1
+```
+
+Delete a OneNote mapping:
+
+```txt
+DELETE /api/onenote/mapeamentos/1
 ```
 
 Process imported OneNote pages into the knowledge database:
@@ -426,7 +459,7 @@ If the reservation node does not exist yet, the relation cannot be created.
 
 When you process a mapping, the API:
 
-1. Opens `Data/mapeamentos.json`.
+1. Opens `Data/reservas-mapeamentos.json` or `Data/onenote-mapeamentos.json`.
 2. Finds the mapping by id or table name.
 3. Reads only rows that are new or updated.
 4. Converts each source row to a `KnowledgeRecordDto`.
@@ -434,13 +467,13 @@ When you process a mapping, the API:
 6. Removes old `Context` and `Arc` rows for that node.
 7. Adds the new `Context` rows based on the mapping's `Contexts` list.
 8. Adds the new `Arc` rows based on parent/relation mappings.
-9. Updates the checkpoint in `Data/mapeamentos.json`.
+9. Updates the checkpoint in the same mapping file.
 
 ## Why Nothing Appears After Deleting SQL Data Manually
 
 If you manually delete records from the knowledge database and then process again, the API may not recreate them.
 
-That happens because the checkpoint in `Data/mapeamentos.json` still says those records were already processed.
+That happens because the checkpoint in `Data/reservas-mapeamentos.json` still says those records were already processed.
 
 Example:
 
@@ -465,7 +498,7 @@ Then run the processing endpoint again.
 If you want to test from the beginning:
 
 1. Clear the generated data from the knowledge database if needed.
-2. Open `Data/mapeamentos.json`.
+2. Open `Data/reservas-mapeamentos.json`.
 3. Set `LastProcessedId` to `0`.
 4. Set `LastSuccessfulProcessingDate` to `null`.
 5. Run `POST /api/processamento/tabela/Reserva?limit=100`.
@@ -564,15 +597,3 @@ Run the API:
 ```bash
 dotnet run
 ```
-
-## Cleaning Extra Database Columns
-
-The knowledge database should only use the fields from the original SQL script.
-
-If SQL Server already has extra columns, run this script manually in SQL Server:
-
-```txt
-Data/cleanup_api_node_reservas.sql
-```
-
-That script keeps only the original columns for `Node`, `Context` and `Arc`.

@@ -9,8 +9,8 @@ namespace api_node_reservas.Controllers;
 ================================================================================
                          OneNote mapping configuration API
 ================================================================================
- These endpoints show the OneNote mapping definitions. OneNote mappings are kept
- in Data/onenote-mapeamentos.json so they do not mix with Reservas mappings.
+ These endpoints manage the OneNote mapping definitions. OneNote mappings are
+ kept in Data/onenote-mapeamentos.json so they do not mix with Reservas mappings.
 ================================================================================
 */
 [ApiController]
@@ -20,7 +20,7 @@ public class Mapeamentos_OneNoteController : ControllerBase
 {
     private readonly OneNoteMappingRepository mappingRepository;
 
-    // Receives the repository that reads Data/onenote-mapeamentos.json.
+    // Receives the repository that reads and writes Data/onenote-mapeamentos.json.
     public Mapeamentos_OneNoteController(OneNoteMappingRepository mappingRepository)
     {
         this.mappingRepository = mappingRepository;
@@ -79,5 +79,63 @@ public class Mapeamentos_OneNoteController : ControllerBase
         }
 
         return Ok(mapping);
+    }
+
+    /// <summary>
+    /// Creates a new OneNote mapping configuration.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(MappingConfiguration), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // Creates a new OneNote mapping from the request body.
+    public ActionResult<MappingConfiguration> Create(MappingConfigurationDto dto)
+    {
+        MappingConfiguration mapping = mappingRepository.Create(dto);
+        return CreatedAtAction(nameof(GetById), new { id = mapping.Id }, mapping);
+    }
+
+    /// <summary>
+    /// Updates one OneNote mapping configuration.
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // Updates one OneNote mapping using the id from the URL and the new data from the request body.
+    public IActionResult Update(int id, MappingConfigurationDto dto)
+    {
+        bool updated = mappingRepository.Update(id, dto);
+
+        if (!updated)
+        {
+            return NotFound(new ErrorDto { Message = "OneNote mapping not found." });
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Deletes one OneNote mapping configuration.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // Deletes one OneNote mapping by id.
+    public IActionResult Delete(int id)
+    {
+        bool deleted = mappingRepository.Delete(id);
+
+        if (!deleted)
+        {
+            return NotFound(new ErrorDto { Message = "OneNote mapping not found." });
+        }
+
+        return NoContent();
     }
 }

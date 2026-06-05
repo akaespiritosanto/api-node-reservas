@@ -1,3 +1,4 @@
+using api_node_reservas.Dtos;
 using api_node_reservas.Models;
 using api_node_reservas.Services;
 using Microsoft.AspNetCore.Hosting;
@@ -52,6 +53,61 @@ public class OneNoteMappingRepositoryTests
         {
             Directory.Delete(folder, true);
         }
+    }
+
+    [Fact]
+    // Checks that OneNote mappings can be created, changed and deleted like Reservas mappings.
+    public void Create_Update_And_Delete_OneNote_Mapping()
+    {
+        string folder = CreateTempFolder();
+
+        try
+        {
+            OneNoteMappingRepository repository = new OneNoteMappingRepository(new TestEnvironment(folder));
+
+            MappingConfiguration created = repository.Create(CreateDto("OneNoteCustomTable"));
+
+            Assert.Equal("OneNoteCustomTable", created.TableName);
+            Assert.NotNull(repository.GetById(created.Id));
+
+            bool updated = repository.Update(created.Id, CreateDto("OneNoteCustomTableUpdated"));
+            MappingConfiguration? saved = repository.GetById(created.Id);
+
+            Assert.True(updated);
+            Assert.NotNull(saved);
+            Assert.Equal("OneNoteCustomTableUpdated", saved.TableName);
+
+            bool deleted = repository.Delete(created.Id);
+
+            Assert.True(deleted);
+            Assert.Null(repository.GetById(created.Id));
+        }
+        finally
+        {
+            Directory.Delete(folder, true);
+        }
+    }
+
+    // Creates a small valid mapping request for the OneNote repository tests.
+    private static MappingConfigurationDto CreateDto(string tableName)
+    {
+        return new MappingConfigurationDto
+        {
+            TableName = tableName,
+            DetectionMethod = "Id",
+            IdFieldName = "id",
+            CreationDateFieldName = "createdDateTime",
+            UpdateDateFieldName = "lastModifiedDateTime",
+            Mapping = new KbMapping
+            {
+                Tabela = tableName,
+                Tipo = "OneNotePage",
+                TipoE = "Note",
+                Reference = "graphPageId",
+                Descricao = "contentText",
+                IdInformacao = "id"
+            }
+        };
     }
 
     private static string CreateTempFolder()

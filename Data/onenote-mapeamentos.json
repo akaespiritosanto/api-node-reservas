@@ -6,8 +6,8 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "createdDateTime",
     "UpdateDateFieldName": "lastModifiedDateTime",
-    "LastProcessedId": 5,
-    "LastSuccessfulProcessingDate": "2026-06-02T15:50:10.9681448Z",
+    "LastProcessedId": 6,
+    "LastSuccessfulProcessingDate": "2026-06-05T10:35:56.7230842Z",
     "Mapping": {
       "Tabela": "OneNotePageImport",
       "Tipo": "OneNotePage",
