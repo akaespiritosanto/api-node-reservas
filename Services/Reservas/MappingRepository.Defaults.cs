@@ -107,9 +107,12 @@ public partial class MappingRepository
                     "quantidade",
                     "id_entidade"
                 },
-                Parent = new List<string>
+                Parent = new List<KbParentMapping>
                 {
-                    "id_reserva"
+                    new KbParentMapping
+                    {
+                        FieldName = "id_reserva"
+                    }
                 },
                 Relations = new List<KbRelationMapping>
                 {

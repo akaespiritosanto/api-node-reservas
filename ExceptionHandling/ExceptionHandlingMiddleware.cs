@@ -14,12 +14,17 @@ public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate next;
     private readonly ILogger<ExceptionHandlingMiddleware> logger;
+    private readonly IWebHostEnvironment? environment;
 
     // Receives the next middleware so requests can continue inside a try/catch block.
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionHandlingMiddleware> logger,
+        IWebHostEnvironment? environment = null)
     {
         this.next = next;
         this.logger = logger;
+        this.environment = environment;
     }
 
     // Runs the request and converts exceptions into JSON error responses.
@@ -37,8 +42,29 @@ public class ExceptionHandlingMiddleware
         catch (Exception exception)
         {
             logger.LogError(exception, "Unexpected error while processing the request.");
-            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, "Internal server error.");
+            string message = IsDevelopment()
+                ? CreateDevelopmentErrorMessage(exception)
+                : "Internal server error.";
+
+            await WriteErrorAsync(context, StatusCodes.Status500InternalServerError, message);
         }
+    }
+
+    // In local Development, show the real error so Swagger helps with debugging.
+    private bool IsDevelopment()
+    {
+        return environment?.EnvironmentName.Equals("Development", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    // Adds the inner exception because SQL errors often keep the useful detail there.
+    private static string CreateDevelopmentErrorMessage(Exception exception)
+    {
+        if (exception.InnerException is null)
+        {
+            return exception.Message;
+        }
+
+        return $"{exception.Message} Detail: {exception.InnerException.Message}";
     }
 
     // Writes one JSON error response with the chosen HTTP status code.

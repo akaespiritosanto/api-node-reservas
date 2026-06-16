@@ -69,9 +69,12 @@ public partial class KnowledgeProcessingService
     // Adds mapped parent columns used for relation targets.
     private static void AddParentColumnsIfTheyExist(List<string> selectedColumns, List<string> tableColumns, MappingConfiguration mapping)
     {
-        foreach (string parent in mapping.Mapping.Parent)
+        foreach (KbParentMapping parent in mapping.Mapping.Parent)
         {
-            AddColumnIfExists(selectedColumns, tableColumns, parent);
+            AddColumnIfExists(selectedColumns, tableColumns, parent.FieldName);
+            AddColumnIfExists(selectedColumns, tableColumns, parent.FieldId);
+            AddColumnIfExists(selectedColumns, tableColumns, parent.GroupBy);
+            AddColumnIfExists(selectedColumns, tableColumns, parent.GroupById);
         }
     }
 
@@ -94,13 +97,19 @@ public partial class KnowledgeProcessingService
             return;
         }
 
+        // Try to find the real column name in the source table. The mapping
+        // may use different casing or different text; FindRealColumnName
+        // searches case-insensitively and returns the actual table column
+        // name when found.
         string? realColumnName = FindRealColumnName(tableColumns, possibleColumn);
 
+        // If the source table does not have this column, skip it.
         if (realColumnName is null)
         {
             return;
         }
 
+        // Avoid adding the same column twice.
         if (ColumnExists(selectedColumns, realColumnName))
         {
             return;
@@ -112,6 +121,10 @@ public partial class KnowledgeProcessingService
     // Finds the real table column name, keeping the database casing.
     private static string? FindRealColumnName(List<string> tableColumns, string possibleColumn)
     {
+        // The source table column names are returned from the database with
+        // their real casing. We want to match mapping names in a case-
+        // insensitive way but keep the exact database name when adding
+        // it to the SELECT list.
         foreach (string tableColumn in tableColumns)
         {
             if (tableColumn.Equals(possibleColumn, StringComparison.OrdinalIgnoreCase))

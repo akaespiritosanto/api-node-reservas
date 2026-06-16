@@ -26,5 +26,6 @@ public class KnowledgeRecordDto
     public string ParentType { get; set; } = string.Empty;
     public List<string> Contexts { get; set; } = new List<string>();
     public List<string> Parent { get; set; } = new List<string>();
+    public List<KnowledgeParentDto> ParentMappings { get; set; } = new List<KnowledgeParentDto>();
     public List<KnowledgeRelationDto> Relations { get; set; } = new List<KnowledgeRelationDto>();
 }

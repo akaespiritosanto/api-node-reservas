@@ -52,7 +52,9 @@ public class ReservasDbContext : DbContext
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.Id).HasColumnName("id");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.GraphPageId).HasColumnName("graphPageId").HasColumnType("nvarchar(200)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.UserId).HasColumnName("userId").HasColumnType("nvarchar(200)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.NotebookId).HasColumnName("notebookId").HasColumnType("nvarchar(200)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.NotebookName).HasColumnName("notebookName").HasColumnType("nvarchar(500)");
+        modelBuilder.Entity<OneNotePageImport>().Property(page => page.SectionId).HasColumnName("sectionId").HasColumnType("nvarchar(200)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.SectionName).HasColumnName("sectionName").HasColumnType("nvarchar(500)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.PageTitle).HasColumnName("pageTitle").HasColumnType("nvarchar(1000)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.ContentText).HasColumnName("contentText").HasColumnType("nvarchar(max)");

@@ -44,11 +44,20 @@ public partial class OneNoteMappingRepository
                     ContextPar1 = "",
                     ContextDescriptionType = "",
                     ParentType = "",
-                    Contexts = new List<string>
+                    Contexts = new List<string>(),
+                    Parent = new List<KbParentMapping>
                     {
-                        "userId",
-                        "notebookName",
-                        "sectionName"
+                        new KbParentMapping
+                        {
+                            FieldName = "notebookName",
+                            FieldId = "notebookId",
+                            ParentType = "notebook",
+                            ParentTypeId = 3001,
+                            GroupBy = "sectionName",
+                            GroupById = "sectionId",
+                            GroupByType = "section",
+                            GroupByTypeId = 3002
+                        }
                     }
                 }
             }

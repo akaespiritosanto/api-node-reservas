@@ -10,6 +10,9 @@ public class OneNoteMappingRepositoryTests
 {
     [Fact]
     // Checks that OneNote mappings are created in their own JSON file.
+    // Beginner note: this test makes sure the repository writes a default
+    // mapping file for OneNote. It uses a temporary folder so it does not
+    // change your real project files.
     public void Constructor_Creates_Default_OneNote_Mapping_File()
     {
         string folder = CreateTempFolder();
@@ -28,6 +31,16 @@ public class OneNoteMappingRepositoryTests
             Assert.Equal("sectionName", mappings[0].Mapping.Par2);
             Assert.Equal("webUrl", mappings[0].Mapping.Link);
             Assert.Equal("graphPageId", mappings[0].Mapping.ExternalId);
+            Assert.Empty(mappings[0].Mapping.Contexts);
+            Assert.Single(mappings[0].Mapping.Parent);
+            Assert.Equal("notebookName", mappings[0].Mapping.Parent[0].FieldName);
+            Assert.Equal("notebookId", mappings[0].Mapping.Parent[0].FieldId);
+            Assert.Equal("notebook", mappings[0].Mapping.Parent[0].ParentType);
+            Assert.Equal(3001, mappings[0].Mapping.Parent[0].ParentTypeId);
+            Assert.Equal("sectionName", mappings[0].Mapping.Parent[0].GroupBy);
+            Assert.Equal("sectionId", mappings[0].Mapping.Parent[0].GroupById);
+            Assert.Equal("section", mappings[0].Mapping.Parent[0].GroupByType);
+            Assert.Equal(3002, mappings[0].Mapping.Parent[0].GroupByTypeId);
             Assert.True(File.Exists(Path.Combine(folder, "Data", "onenote-mapeamentos.json")));
         }
         finally
@@ -38,6 +51,8 @@ public class OneNoteMappingRepositoryTests
 
     [Fact]
     // Checks that the OneNote checkpoint is saved in onenote-mapeamentos.json.
+    // Beginner note: checkpoint means the last processed id and date so the
+    // importer does not reprocess the same pages repeatedly.
     public void UpdateProcessingState_Saves_OneNote_Checkpoint()
     {
         string folder = CreateTempFolder();
@@ -63,6 +78,8 @@ public class OneNoteMappingRepositoryTests
 
     [Fact]
     // Checks that OneNote mappings can be created, changed and deleted like Reservas mappings.
+    // Beginner note: this test simulates a user creating and later updating
+    // or deleting a mapping configuration using the repository.
     public void Create_Update_And_Delete_OneNote_Mapping()
     {
         string folder = CreateTempFolder();

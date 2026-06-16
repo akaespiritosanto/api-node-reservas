@@ -77,9 +77,12 @@ public partial class KnowledgeProcessingService
     // Checks mapped parent columns.
     private static void AddMissingParentColumns(List<string> missingColumns, List<string> tableColumns, MappingConfiguration mapping)
     {
-        foreach (string parent in mapping.Mapping.Parent)
+        foreach (KbParentMapping parent in mapping.Mapping.Parent)
         {
-            AddMissingMappedColumn(missingColumns, tableColumns, "parent", parent);
+            AddMissingMappedColumn(missingColumns, tableColumns, "parent.fieldName", parent.FieldName);
+            AddMissingMappedColumn(missingColumns, tableColumns, "parent.fieldId", parent.FieldId);
+            AddMissingMappedColumn(missingColumns, tableColumns, "parent.groupBy", parent.GroupBy);
+            AddMissingMappedColumn(missingColumns, tableColumns, "parent.groupById", parent.GroupById);
         }
     }
 

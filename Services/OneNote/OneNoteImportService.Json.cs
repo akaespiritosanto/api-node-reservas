@@ -52,6 +52,17 @@ public partial class OneNoteImportService
         return GetJsonString(nested, "displayName");
     }
 
+    // Reads an id from a nested JSON object.
+    private static string ReadNestedId(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out JsonElement nested))
+        {
+            return string.Empty;
+        }
+
+        return GetJsonString(nested, "id");
+    }
+
     // Reads a string property safely.
     private static string GetJsonString(JsonElement element, string propertyName)
     {

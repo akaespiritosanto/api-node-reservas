@@ -19,6 +19,15 @@ using System.Reflection;
 */
 DotEnvService.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
+// ---------------------------------------------------------------------------
+// Beginner note: this file wires together everything the application needs.
+// Think of it as the "main" that prepares the app and then runs it.
+// - Load configuration (.env)
+// - Register services (dependency injection)
+// - Configure middleware (error handling, authentication)
+// - Start listening for HTTP requests (app.Run())
+// ---------------------------------------------------------------------------
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();

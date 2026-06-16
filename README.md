@@ -309,6 +309,18 @@ offline_access
 
 `Notes.Read` allows the app to read OneNote notebooks on behalf of the signed-in user.
 
+Note: the attached screenshot shows more detailed permission names. The full list of delegated permissions required to test the OneNote flow locally is:
+
+- Notes.Read.All (read all OneNote notebooks the signed-in user can access)
+- offline_access (keep refresh tokens so you can import later)
+- openid (required for sign-in)
+- profile (basic profile information)
+- User.Read (read user profile)
+
+Add those delegated permissions and then click "Grant admin consent" if you control the tenant. For local testing with a personal account, granting consent during the sign-in flow is usually enough.
+
+If you forget to add these permissions the OneNote import will fail with authentication or permission errors. Check the application logs and the Azure App registration -> API permissions page to confirm.
+
 Official Microsoft documentation:
 
 - Register an application: https://learn.microsoft.com/en-us/graph/auth-register-app-v2

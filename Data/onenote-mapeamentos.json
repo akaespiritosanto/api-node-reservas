@@ -6,8 +6,8 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "createdDateTime",
     "UpdateDateFieldName": "lastModifiedDateTime",
-    "LastProcessedId": 6,
-    "LastSuccessfulProcessingDate": null,
+    "LastProcessedId": 15,
+    "LastSuccessfulProcessingDate": "2026-06-15T12:29:05.0977008Z",
     "Mapping": {
       "Tabela": "OneNotePageImport",
       "Tipo": "OneNotePage",
@@ -30,12 +30,19 @@
       "ContextPar1": "",
       "ContextDescriptionType": "",
       "ParentType": "",
-      "Contexts": [
-        "userId",
-        "notebookName",
-        "sectionName"
+      "Contexts": [],
+      "Parent": [
+        {
+          "fieldName": "notebookName",
+          "fieldId": "notebookId",
+          "parentType": "notebook",
+          "parentTypeId": 3001,
+          "groupBy": "sectionName",
+          "groupById": "sectionId",
+          "groupByType": "section",
+          "groupByTypeId": 3002
+        }
       ],
-      "Parent": [],
       "Relations": []
     }
   }

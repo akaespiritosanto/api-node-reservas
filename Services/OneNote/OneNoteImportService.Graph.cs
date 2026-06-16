@@ -45,7 +45,7 @@ public partial class OneNoteImportService
     {
         List<OneNotePageData> pages = new List<OneNotePageData>();
         string fields = "id,title,createdDateTime,lastModifiedDateTime,links,parentSection,parentNotebook";
-        string url = $"https://graph.microsoft.com/v1.0/me/onenote/pages?$top={limit}&$select={fields}";
+        string url = $"https://graph.microsoft.com/v1.0/me/onenote/pages?$top={limit}&$select={fields}&$expand=parentNotebook,parentSection";
 
         using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -89,7 +89,9 @@ public partial class OneNoteImportService
             CreatedDateTime = GetJsonDate(pageJson, "createdDateTime"),
             LastModifiedDateTime = GetJsonDate(pageJson, "lastModifiedDateTime"),
             WebUrl = ReadWebUrl(pageJson),
+            SectionId = ReadNestedId(pageJson, "parentSection"),
             SectionName = ReadNestedDisplayName(pageJson, "parentSection"),
+            NotebookId = ReadNestedId(pageJson, "parentNotebook"),
             NotebookName = ReadNestedDisplayName(pageJson, "parentNotebook")
         };
     }

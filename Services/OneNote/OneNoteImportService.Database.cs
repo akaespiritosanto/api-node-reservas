@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Data.Common;
 
@@ -28,7 +29,9 @@ BEGIN
         id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
         graphPageId NVARCHAR(200) NOT NULL,
         userId NVARCHAR(200) NOT NULL,
+        notebookId NVARCHAR(200) NOT NULL,
         notebookName NVARCHAR(500) NOT NULL,
+        sectionId NVARCHAR(200) NOT NULL,
         sectionName NVARCHAR(500) NOT NULL,
         pageTitle NVARCHAR(1000) NOT NULL,
         contentText NVARCHAR(MAX) NOT NULL,
@@ -40,6 +43,30 @@ BEGIN
     );
 
     CREATE UNIQUE INDEX IX_OneNotePageImport_GraphPageId ON dbo.OneNotePageImport(graphPageId);
+END";
+
+        try
+        {
+            await reservasDbContext.Database.ExecuteSqlRawAsync(sql);
+            await AddImportColumnIfMissingAsync("notebookId", "NVARCHAR(200) NOT NULL DEFAULT ''");
+            await AddImportColumnIfMissingAsync("sectionId", "NVARCHAR(200) NOT NULL DEFAULT ''");
+        }
+        catch (SqlException exception)
+        {
+            throw new InvalidOperationException(
+                $"Error preparing the OneNote import table. Check whether the source database connection works and whether the SQL user can alter OneNotePageImport. Detail: {exception.Message}",
+                exception);
+        }
+    }
+
+    // Adds a new column when the staging table was created by an older version of the API.
+    private async Task AddImportColumnIfMissingAsync(string columnName, string columnDefinition)
+    {
+        string sql = $@"
+IF OBJECT_ID('dbo.OneNotePageImport', 'U') IS NOT NULL
+AND COL_LENGTH('dbo.OneNotePageImport', '{columnName}') IS NULL
+BEGIN
+    ALTER TABLE dbo.OneNotePageImport ADD {columnName} {columnDefinition};
 END";
 
         await reservasDbContext.Database.ExecuteSqlRawAsync(sql);
@@ -95,9 +122,9 @@ END";
         await using DbCommand command = connection.CreateCommand();
         command.CommandText = @"
 INSERT INTO dbo.OneNotePageImport
-(graphPageId, userId, notebookName, sectionName, pageTitle, contentText, contentHtml, createdDateTime, lastModifiedDateTime, webUrl, importedAt)
+(graphPageId, userId, notebookId, notebookName, sectionId, sectionName, pageTitle, contentText, contentHtml, createdDateTime, lastModifiedDateTime, webUrl, importedAt)
 VALUES
-(@graphPageId, @userId, @notebookName, @sectionName, @pageTitle, @contentText, @contentHtml, @createdDateTime, @lastModifiedDateTime, @webUrl, @importedAt)";
+(@graphPageId, @userId, @notebookId, @notebookName, @sectionId, @sectionName, @pageTitle, @contentText, @contentHtml, @createdDateTime, @lastModifiedDateTime, @webUrl, @importedAt)";
 
         AddPageParameters(command, page);
         await command.ExecuteNonQueryAsync();
@@ -110,7 +137,9 @@ VALUES
         command.CommandText = @"
 UPDATE dbo.OneNotePageImport
 SET userId = @userId,
+    notebookId = @notebookId,
     notebookName = @notebookName,
+    sectionId = @sectionId,
     sectionName = @sectionName,
     pageTitle = @pageTitle,
     contentText = @contentText,
@@ -130,7 +159,9 @@ WHERE graphPageId = @graphPageId";
     {
         AddParameter(command, "@graphPageId", page.GraphPageId);
         AddParameter(command, "@userId", page.UserId);
+        AddParameter(command, "@notebookId", page.NotebookId);
         AddParameter(command, "@notebookName", page.NotebookName);
+        AddParameter(command, "@sectionId", page.SectionId);
         AddParameter(command, "@sectionName", page.SectionName);
         AddParameter(command, "@pageTitle", page.PageTitle);
         AddParameter(command, "@contentText", page.ContentText);

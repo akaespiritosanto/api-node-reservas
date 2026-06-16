@@ -26,10 +26,35 @@ public partial class KnowledgeProcessingService
 
         // Parent values are optional relation targets.
         List<string> parents = new List<string>();
+        List<KnowledgeParentDto> parentMappings = new List<KnowledgeParentDto>();
 
-        foreach (string parent in mapping.Mapping.Parent)
+        foreach (KbParentMapping parent in mapping.Mapping.Parent)
         {
-            parents.Add(GetMappedValue(row, parent));
+            // Always create a structured parent mapping DTO so the context tree
+            // logic can create notebook/section nodes and contexts even when
+            // groupBy is not provided. This keeps behavior simple and explicit.
+            KnowledgeParentDto parentDto = new KnowledgeParentDto
+            {
+                FieldName = GetMappedValue(row, parent.FieldName),
+                FieldId = GetMappedValue(row, parent.FieldId),
+                ParentType = parent.ParentType,
+                ParentTypeId = parent.ParentTypeId,
+                GroupBy = GetMappedValue(row, parent.GroupBy),
+                GroupById = GetMappedValue(row, parent.GroupById),
+                GroupByType = parent.GroupByType,
+                GroupByTypeId = parent.GroupByTypeId
+            };
+
+            parentMappings.Add(parentDto);
+
+            // Preserve the original simple parent list for backwards
+            // compatibility: when the mapping did not use groupBy the code
+            // previously added the fieldName value to the Parent list so arcs
+            // and other logic continued to work. Keep that behavior.
+            if (string.IsNullOrWhiteSpace(parent.GroupBy))
+            {
+                parents.Add(GetMappedValue(row, parent.FieldName));
+            }
         }
 
         // Relations are converted before saving so the saving code has one simple format.
@@ -74,6 +99,7 @@ public partial class KnowledgeProcessingService
             ParentType = GetMappedValue(row, mapping.Mapping.ParentType),
             Contexts = contexts,
             Parent = parents,
+            ParentMappings = parentMappings,
             Relations = relations
         };
     }
@@ -81,22 +107,32 @@ public partial class KnowledgeProcessingService
     // Gets a value from the source row, or returns the mapping value as fixed text.
     private static string GetMappedValue(Dictionary<string, object?> row, string mappingValue)
     {
-        // Empty mapping fields stay empty.
+        // If the mapping is empty or whitespace, there is nothing to map.
         if (string.IsNullOrWhiteSpace(mappingValue))
         {
             return string.Empty;
         }
 
-        object? columnValue = GetValue(row, mappingValue);
-
-        // If the value is not a column name, it is treated as a fixed value.
-        // Example: "Reserva" is a fixed value for Tipo.
-        if (columnValue is null)
+        // If the source row contains a column with the mapping name then the
+        // mapping refers to an actual column. We use TryGetValue so we can
+        // distinguish between a missing column and a column that exists but
+        // contains NULL in the database.
+        if (row.TryGetValue(mappingValue, out object? columnValue))
         {
-            return mappingValue;
+            // Column exists. If the database value was NULL, return empty string.
+            if (columnValue is null)
+            {
+                return string.Empty;
+            }
+
+            // Convert the column value to string in a safe way.
+            string? converted = Convert.ToString(columnValue);
+            return converted ?? string.Empty;
         }
 
-        return Convert.ToString(columnValue) ?? string.Empty;
+        // If the mappingValue is not a column name then we treat it as fixed
+        // text provided in the mapping configuration. Example: "Reserva".
+        return mappingValue;
     }
 
     // Tries to get one column value from the row dictionary.
@@ -113,10 +149,9 @@ public partial class KnowledgeProcessingService
     // Converts text to int and returns 0 when the text is not a valid number.
     private static int ToInt(string value)
     {
-        // Bad or empty numbers become 0 instead of throwing an exception.
-        bool converted = int.TryParse(value, out int result);
-
-        if (converted)
+        // TryParse will not throw. If parsing succeeds we return the number,
+        // otherwise we return 0. This keeps the rest of the code simple.
+        if (int.TryParse(value, out int result))
         {
             return result;
         }
@@ -133,11 +168,13 @@ public partial class KnowledgeProcessingService
             return string.Empty;
         }
 
+        // If the text is already short enough, return it unchanged.
         if (text.Length <= maxLength)
         {
             return text;
         }
 
-        return text[..maxLength];
+        // Otherwise cut the text to the allowed maximum length and return it.
+        return text.Substring(0, maxLength);
     }
 }

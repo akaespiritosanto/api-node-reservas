@@ -14,7 +14,9 @@ public partial class OneNoteImportService
     {
         public string GraphPageId { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
+        public string NotebookId { get; set; } = string.Empty;
         public string NotebookName { get; set; } = string.Empty;
+        public string SectionId { get; set; } = string.Empty;
         public string SectionName { get; set; } = string.Empty;
         public string PageTitle { get; set; } = string.Empty;
         public string ContentText { get; set; } = string.Empty;

@@ -92,6 +92,7 @@ public partial class KnowledgeProcessingService
         logger.LogInformation("Processing mapping {MappingId} for table {TableName}.", mapping.Id, mapping.TableName);
 
         ValidateMapping(mapping);
+        await PrepareKnowledgeDatabaseAsync();
 
         // The rows are dictionaries because every mapping can use different column names.
         List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit);
