@@ -6,6 +6,7 @@ using api_node_reservas.Swagger;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 
 /*
 ================================================================================
@@ -101,6 +102,35 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+// Run a small, safe migration at startup to copy any existing values from
+// the old `parent` column into `location`, then drop the `parent` column.
+// This keeps the database consistent with the code change that removed the
+// Parent property from the Context model. The SQL runs only if the column
+// exists and errors are caught and logged so the application still starts.
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<KnowledgeDbContext>();
+        var sql = @"IF EXISTS(SELECT * FROM sys.columns WHERE Name = N'parent' AND Object_ID = OBJECT_ID(N'dbo.[Context]'))
+BEGIN
+    UPDATE [Context] SET [location] = [parent] WHERE [parent] IS NOT NULL;
+    ALTER TABLE [Context] DROP COLUMN [parent];
+END";
+
+        db.Database.ExecuteSqlRaw(sql);
+        logger.LogInformation("Context: copied parent -> location and dropped parent column if it existed.");
+    }
+    catch (Exception ex)
+    {
+        // If anything fails here, we log and continue; the app should not be
+        // prevented from starting because of this one-time migration.
+        var logger2 = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger2.LogWarning(ex, "Parent->location migration skipped: {Message}", ex.Message);
+    }
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();

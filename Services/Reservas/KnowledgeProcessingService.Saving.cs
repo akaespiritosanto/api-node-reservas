@@ -42,7 +42,7 @@ public partial class KnowledgeProcessingService
     {
         List<Context> oldContexts = await knowledgeDbContext.Contexts
             .Where(context => context.NodeId == node.Id
-                && (context.Parent != 0
+                && (context.Location != 0
                     || context.DescriptionType == null
                     || context.DescriptionType != TreeContextDescriptionType))
             .ToListAsync();

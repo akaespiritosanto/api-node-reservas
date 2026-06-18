@@ -51,7 +51,10 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<Context>().HasKey(context => context.Id);
         modelBuilder.Entity<Context>().Property(context => context.Id).HasColumnName("id");
         modelBuilder.Entity<Context>().Property(context => context.Description).HasColumnName("description").HasColumnType("varchar(8000)");
-        modelBuilder.Entity<Context>().Property(context => context.Parent).HasColumnName("parent");
+        // The original 'parent' column was removed and its values copied into
+        // the 'location' column. The Context model no longer has a Parent
+        // property; Location now contains the parent context id when used
+        // as part of the tree structure.
         modelBuilder.Entity<Context>().Property(context => context.Location).HasColumnName("location");
         modelBuilder.Entity<Context>().Property(context => context.NodeId).HasColumnName("nodeId");
         modelBuilder.Entity<Context>().Property(context => context.Par1).HasColumnName("par1").HasColumnType("varchar(200)");

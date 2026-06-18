@@ -21,7 +21,12 @@ public partial class KnowledgeProcessingService
     // Creates the Context rows for one Node.
     private void AddContexts(Node node, KnowledgeRecordDto record, DateTime updateDate, SaveResult result)
     {
-        // Location is the order of the context value for this Node: 1, 2, 3, ...
+        // Note: the original implementation used a separate Parent field to
+        // represent tree relationships and Location as an order index.
+        // The database schema was changed: the Parent column was removed and
+        // its values were copied into the Location column. From now on
+        // Location holds the parent context id for tree rows. For simple
+        // context values Location will be 0.
         int location = 1;
 
         foreach (string contextValue in record.Contexts)
@@ -39,8 +44,8 @@ public partial class KnowledgeProcessingService
             {
                 NodeId = node.Id,
                 Description = LimitText(contextValue, 8000),
-                Parent = 0,
-                Location = location,
+                // non-tree context: no parent, Location set to 0
+                Location = 0,
                 Par1 = LimitNullableText(record.ContextPar1, 200),
                 UpdateDate = updateDate,
                 DescriptionType = LimitNullableText(record.ContextDescriptionType, 10)
@@ -93,8 +98,8 @@ public partial class KnowledgeProcessingService
             {
                 NodeId = node.Id,
                 Description = LimitText(node.Reference, 8000),
-                Parent = parentContext.Id,
-                Location = 0,
+                // tree context: parent id is stored in Location now
+                Location = parentContext.Id,
                 Par1 = null,
                 UpdateDate = updateDate,
                 DescriptionType = TreeContextDescriptionType
@@ -210,7 +215,7 @@ public partial class KnowledgeProcessingService
     {
         Context? childContext = await knowledgeDbContext.Contexts.FirstOrDefaultAsync(context =>
             context.NodeId == nodeId
-            && context.Parent == parentContextId
+            && context.Location == parentContextId
             && context.DescriptionType == TreeContextDescriptionType);
 
         if (childContext is not null)
@@ -224,8 +229,8 @@ public partial class KnowledgeProcessingService
         {
             NodeId = nodeId,
             Description = LimitText(reference, 8000),
-            Parent = parentContextId,
-            Location = 0,
+            // tree child: parent context id is stored in Location
+            Location = parentContextId,
             Par1 = null,
             UpdateDate = updateDate,
             DescriptionType = TreeContextDescriptionType
@@ -243,7 +248,7 @@ public partial class KnowledgeProcessingService
     {
         Context? parentContext = await knowledgeDbContext.Contexts.FirstOrDefaultAsync(context =>
             context.NodeId == parentNodeId
-            && context.Parent == 0
+            && context.Location == 0
             && context.DescriptionType == TreeContextDescriptionType);
 
         if (parentContext is not null)
@@ -259,7 +264,7 @@ public partial class KnowledgeProcessingService
         {
             NodeId = parentNodeId,
             Description = LimitText(parentNode?.Reference ?? string.Empty, 8000),
-            Parent = 0,
+            // root context for parent node: Location = 0 (no parent)
             Location = 0,
             Par1 = null,
             UpdateDate = updateDate,
