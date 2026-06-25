@@ -6,8 +6,8 @@
     "IdFieldName": "ID",
     "CreationDateFieldName": "RequestDate",
     "UpdateDateFieldName": "RequestDate",
-    "LastProcessedId": 100,
-    "LastSuccessfulProcessingDate": "2026-06-25T14:27:12.5630947Z",
+    "LastProcessedId": 0,
+    "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "aplog",
       "Tipo": "Aplogin",
