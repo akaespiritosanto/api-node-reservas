@@ -14,25 +14,10 @@ public partial class KnowledgeProcessingService
     ============================================================================
     */
 
-    // Makes sure the Context table has the parent column used by context trees.
-    private async Task PrepareKnowledgeDatabaseAsync()
+    // Makes sure the Context table is prepared.
+    // The parent column has been replaced by the Location column, so it is no longer recreated.
+    private Task PrepareKnowledgeDatabaseAsync()
     {
-        try
-        {
-            string sql = @"
-IF OBJECT_ID('dbo.Context', 'U') IS NOT NULL
-AND COL_LENGTH('dbo.Context', 'parent') IS NULL
-BEGIN
-    ALTER TABLE dbo.[Context] ADD [parent] INT NOT NULL DEFAULT 0;
-END";
-
-            await knowledgeDbContext.Database.ExecuteSqlRawAsync(sql);
-        }
-        catch (SqlException exception)
-        {
-            throw new InvalidOperationException(
-                $"Error preparing the knowledge database. Check whether the SQL user can alter the Context table. Detail: {exception.Message}",
-                exception);
-        }
+        return Task.CompletedTask;
     }
 }

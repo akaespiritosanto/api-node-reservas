@@ -6,7 +6,7 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "data_pedido",
     "UpdateDateFieldName": "data_actualizacao",
-    "LastProcessedId": 9,
+    "LastProcessedId": 0,
     "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "Reserva",
@@ -45,7 +45,7 @@
     "IdFieldName": "id",
     "CreationDateFieldName": "data_criacao",
     "UpdateDateFieldName": "data_actualizacao",
-    "LastProcessedId": 18,
+    "LastProcessedId": 0,
     "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "ProdutoReservado",

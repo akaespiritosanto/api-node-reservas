@@ -42,6 +42,9 @@ string oldConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_S
 string reservasConnectionString = Environment.GetEnvironmentVariable("RESERVAS_DB_CONNECTION_STRING")
     ?? oldConnectionString;
 
+string umbracoConnectionString = Environment.GetEnvironmentVariable("UMBRACO_DB_CONNECTION_STRING")
+    ?? oldConnectionString;
+
 string knowledgeConnectionString = Environment.GetEnvironmentVariable("KB_DB_CONNECTION_STRING")
     ?? oldConnectionString;
 
@@ -49,8 +52,10 @@ builder.Services.AddControllers();
 builder.Services.AddCors();
 builder.Services.AddDbContext<ReservasDbContext>(options => options.UseSqlServer(reservasConnectionString));
 builder.Services.AddDbContext<KnowledgeDbContext>(options => options.UseSqlServer(knowledgeConnectionString));
+builder.Services.AddDbContext<UmbracoDbContext>(options => options.UseSqlServer(umbracoConnectionString));
 builder.Services.AddSingleton<MappingRepository>();
 builder.Services.AddSingleton<OneNoteMappingRepository>();
+builder.Services.AddSingleton<UmbracoMappingRepository>();
 builder.Services.AddSingleton<OneNoteTokenStore>();
 builder.Services.AddHttpClient<MicrosoftGraphAuthService>();
 builder.Services.AddHttpClient<OneNoteImportService>();

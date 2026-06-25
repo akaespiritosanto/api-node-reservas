@@ -17,8 +17,17 @@ public partial class KnowledgeProcessingService
     // Reads the changed source rows that should be processed for this mapping.
     private async Task<List<Dictionary<string, object?>>> ReadRowsToProcessAsync(MappingConfiguration mapping, int limit)
     {
-        List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
+        // Delegate to the overload that accepts an explicit connection.
         DbConnection connection = reservasDbContext.Database.GetDbConnection();
+        return await ReadRowsToProcessAsync(mapping, limit, connection);
+    }
+
+    // Overload that reads rows using an explicit database connection. This allows
+    // the same processing code to read from different source databases (e.g.
+    // Reservas or Umbraco) depending on the mapping repository in use.
+    private static async Task<List<Dictionary<string, object?>>> ReadRowsToProcessAsync(MappingConfiguration mapping, int limit, DbConnection connection)
+    {
+        List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
 
         try
         {

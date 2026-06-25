@@ -1,6 +1,7 @@
 using api_node_reservas.Data;
 using api_node_reservas.Dtos;
 using api_node_reservas.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Services;
 
@@ -24,6 +25,8 @@ public partial class KnowledgeProcessingService
     private readonly KnowledgeDbContext knowledgeDbContext;
     private readonly MappingRepository mappingRepository;
     private readonly OneNoteMappingRepository oneNoteMappingRepository;
+    private readonly UmbracoDbContext umbracoDbContext;
+    private readonly UmbracoMappingRepository umbracoMappingRepository;
     private readonly ILogger<KnowledgeProcessingService> logger;
 
     public KnowledgeProcessingService(
@@ -31,12 +34,16 @@ public partial class KnowledgeProcessingService
         KnowledgeDbContext knowledgeDbContext,
         MappingRepository mappingRepository,
         OneNoteMappingRepository oneNoteMappingRepository,
+        UmbracoDbContext umbracoDbContext,
+        UmbracoMappingRepository umbracoMappingRepository,
         ILogger<KnowledgeProcessingService> logger)
     {
         this.reservasDbContext = reservasDbContext;
         this.knowledgeDbContext = knowledgeDbContext;
         this.mappingRepository = mappingRepository;
         this.oneNoteMappingRepository = oneNoteMappingRepository;
+        this.umbracoDbContext = umbracoDbContext;
+        this.umbracoMappingRepository = umbracoMappingRepository;
         this.logger = logger;
     }
 
@@ -72,6 +79,20 @@ public partial class KnowledgeProcessingService
         return await ProcessMappingAsync(mapping, limit, oneNoteMappingRepository);
     }
 
+    public async Task<ProcessingResultDto?> ProcessUmbracoMappingAsync(int mappingId, int limit)
+    {
+        MappingConfiguration? mapping = umbracoMappingRepository.GetById(mappingId);
+
+        return await ProcessMappingAsync(mapping, limit, umbracoMappingRepository);
+    }
+
+    public async Task<ProcessingResultDto?> ProcessUmbracoMappingByTableNameAsync(string tableName, int limit)
+    {
+        MappingConfiguration? mapping = umbracoMappingRepository.GetByTableName(tableName);
+
+        return await ProcessMappingAsync(mapping, limit, umbracoMappingRepository);
+    }
+
     // Runs the complete processing flow after the mapping has already been found.
     private async Task<ProcessingResultDto?> ProcessMappingAsync(MappingConfiguration? mapping, int limit)
     {
@@ -95,7 +116,22 @@ public partial class KnowledgeProcessingService
         await PrepareKnowledgeDatabaseAsync();
 
         // The rows are dictionaries because every mapping can use different column names.
-        List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit);
+        // Choose the database connection according to the mapping repository type.
+        System.Data.Common.DbConnection connection = reservasDbContext.Database.GetDbConnection();
+
+        if (processingStateRepository is UmbracoMappingRepository)
+        {
+            // Ensure Umbraco DB connection is configured before attempting to read.
+            var dbConnection = umbracoDbContext.Database.GetDbConnection();
+            if (string.IsNullOrWhiteSpace(dbConnection.ConnectionString))
+            {
+                throw new InvalidOperationException("Umbraco DB connection string is not configured. Set UMBRACO_DB_CONNECTION_STRING or provide a default DB_CONNECTION_STRING in .env or environment variables.");
+            }
+
+            connection = dbConnection;
+        }
+
+        List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit, connection);
         List<KnowledgeRecordDto> records = new List<KnowledgeRecordDto>();
 
         // These values are returned to Swagger so the user can see what happened.
@@ -151,7 +187,11 @@ public partial class KnowledgeProcessingService
             oneNoteRepository.UpdateProcessingState(mappingId, lastProcessedId, processingDate);
             return;
         }
-
+        if (repository is UmbracoMappingRepository umbracoRepository)
+        {
+            umbracoRepository.UpdateProcessingState(mappingId, lastProcessedId, processingDate);
+            return;
+        }
         if (repository is MappingRepository normalRepository)
         {
             normalRepository.UpdateProcessingState(mappingId, lastProcessedId, processingDate);
