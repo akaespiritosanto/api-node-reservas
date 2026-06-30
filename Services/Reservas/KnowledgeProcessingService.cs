@@ -82,15 +82,17 @@ public partial class KnowledgeProcessingService
     public async Task<ProcessingResultDto?> ProcessUmbracoMappingAsync(int mappingId, int limit)
     {
         MappingConfiguration? mapping = umbracoMappingRepository.GetById(mappingId);
+        if (mapping is null) return null;
 
-        return await ProcessMappingAsync(mapping, limit, umbracoMappingRepository);
+        return await ProcessUmbracoMappingInternalAsync(mapping, limit);
     }
 
     public async Task<ProcessingResultDto?> ProcessUmbracoMappingByTableNameAsync(string tableName, int limit)
     {
         MappingConfiguration? mapping = umbracoMappingRepository.GetByTableName(tableName);
+        if (mapping is null) return null;
 
-        return await ProcessMappingAsync(mapping, limit, umbracoMappingRepository);
+        return await ProcessUmbracoMappingInternalAsync(mapping, limit);
     }
 
     // Runs the complete processing flow after the mapping has already been found.

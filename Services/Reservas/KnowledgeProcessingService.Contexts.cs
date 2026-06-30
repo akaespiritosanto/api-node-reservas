@@ -66,7 +66,7 @@ public partial class KnowledgeProcessingService
 
         foreach (string parentIdText in record.Parent)
         {
-            if (string.IsNullOrWhiteSpace(parentIdText))
+            if (string.IsNullOrWhiteSpace(parentIdText) || parentIdText == "-1" || parentIdText == "0")
             {
                 continue;
             }

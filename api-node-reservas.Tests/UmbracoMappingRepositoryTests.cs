@@ -20,10 +20,12 @@ public class UmbracoMappingRepositoryTests
 
             List<MappingConfiguration> mappings = repository.GetAll();
 
-            Assert.Single(mappings);
-            Assert.Equal("cmsContent", mappings[0].TableName);
-            Assert.Equal("nodeId", mappings[0].Mapping.Reference);
-            Assert.True(File.Exists(Path.Combine(folder, "Data", "umbraco-mapeamentos.json")));
+            Assert.Equal(2, mappings.Count);
+            Assert.Equal("cmsDocument", mappings[0].TableName);
+            Assert.Equal("text", mappings[0].Mapping.Reference);
+            Assert.Equal("cmsContent", mappings[1].TableName);
+            Assert.Equal("text", mappings[1].Mapping.Reference);
+            Assert.True(File.Exists(Path.Combine(folder, "Data", "Umbraco", "umbraco-mapeamentos.json")));
         }
         finally
         {

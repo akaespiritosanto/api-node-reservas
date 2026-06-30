@@ -26,7 +26,7 @@ public class MappingRepositoryTests
             Assert.True(mappings.Count >= 2);
             Assert.Contains(mappings, mapping => mapping.TableName == "Reserva");
             Assert.Contains(mappings, mapping => mapping.TableName == "ProdutoReservado");
-            Assert.True(File.Exists(Path.Combine(folder, "Data", "reservas-mapeamentos.json")));
+            Assert.True(File.Exists(Path.Combine(folder, "Data", "Reservas", "reservas-mapeamentos.json")));
         }
         finally
         {

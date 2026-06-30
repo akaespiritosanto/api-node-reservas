@@ -25,7 +25,7 @@ public partial class OneNoteMappingRepository
     public OneNoteMappingRepository(IWebHostEnvironment environment)
     {
         // The JSON file lives inside the project Data folder.
-        string dataFolder = Path.Combine(environment.ContentRootPath, "Data");
+        string dataFolder = Path.Combine(environment.ContentRootPath, "Data", "OneNote");
         Directory.CreateDirectory(dataFolder);
 
         filePath = Path.Combine(dataFolder, "onenote-mapeamentos.json");

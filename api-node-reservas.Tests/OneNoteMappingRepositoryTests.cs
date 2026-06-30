@@ -41,7 +41,7 @@ public class OneNoteMappingRepositoryTests
             Assert.Equal("sectionId", mappings[0].Mapping.Parent[0].GroupById);
             Assert.Equal("section", mappings[0].Mapping.Parent[0].GroupByType);
             Assert.Equal(3002, mappings[0].Mapping.Parent[0].GroupByTypeId);
-            Assert.True(File.Exists(Path.Combine(folder, "Data", "onenote-mapeamentos.json")));
+            Assert.True(File.Exists(Path.Combine(folder, "Data", "OneNote", "onenote-mapeamentos.json")));
         }
         finally
         {

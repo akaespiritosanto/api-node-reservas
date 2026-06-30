@@ -9,7 +9,38 @@ public partial class UmbracoMappingRepository
     {
         return new List<MappingConfiguration>
         {
+            CreateCmsDocumentDefaultMapping(),
             CreateCmsContentDefaultMapping()
+        };
+    }
+
+    private static MappingConfiguration CreateCmsDocumentDefaultMapping()
+    {
+        return new MappingConfiguration
+        {
+            Id = 1,
+            TableName = "cmsDocument",
+            DetectionMethod = "Id",
+            IdFieldName = "nodeId",
+            CreationDateFieldName = "",
+            UpdateDateFieldName = "updateDate",
+            Mapping = new KbMapping
+            {
+                Tabela = "cmsDocument",
+                Tipo = "contentType",
+                TipoE = "Document",
+                Reference = "text",
+                Descricao = "",
+                IdInformacao = "nodeId",
+                Contexts = new List<string>(),
+                Parent = new List<KbParentMapping>
+                {
+                    new KbParentMapping
+                    {
+                        FieldName = "parentID"
+                    }
+                }
+            }
         };
     }
 
@@ -17,22 +48,28 @@ public partial class UmbracoMappingRepository
     {
         return new MappingConfiguration
         {
-            Id = 1,
+            Id = 2,
             TableName = "cmsContent",
             DetectionMethod = "Id",
-            IdFieldName = "pk",
+            IdFieldName = "nodeId",
             CreationDateFieldName = "",
             UpdateDateFieldName = "",
             Mapping = new KbMapping
             {
                 Tabela = "cmsContent",
-                Tipo = "CmsContent",
+                Tipo = "contentType",
                 TipoE = "Content",
-                Reference = "nodeId",
+                Reference = "text",
                 Descricao = "",
-                IdInformacao = "pk",
+                IdInformacao = "nodeId",
                 Contexts = new List<string>(),
-                Parent = new List<KbParentMapping>()
+                Parent = new List<KbParentMapping>
+                {
+                    new KbParentMapping
+                    {
+                        FieldName = "parentID"
+                    }
+                }
             }
         };
     }

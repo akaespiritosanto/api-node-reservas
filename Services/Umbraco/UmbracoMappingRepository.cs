@@ -24,7 +24,7 @@ public partial class UmbracoMappingRepository
 
     public UmbracoMappingRepository(IWebHostEnvironment environment)
     {
-        string dataFolder = Path.Combine(environment.ContentRootPath, "Data");
+        string dataFolder = Path.Combine(environment.ContentRootPath, "Data", "Umbraco");
         Directory.CreateDirectory(dataFolder);
 
         filePath = Path.Combine(dataFolder, "umbraco-mapeamentos.json");

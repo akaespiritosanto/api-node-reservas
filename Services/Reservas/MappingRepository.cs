@@ -24,7 +24,7 @@ public partial class MappingRepository
     // Builds the path to Data/reservas-mapeamentos.json and creates the default file if it does not exist.
     public MappingRepository(IWebHostEnvironment environment)
     {
-        string dataFolder = Path.Combine(environment.ContentRootPath, "Data");
+        string dataFolder = Path.Combine(environment.ContentRootPath, "Data", "Reservas");
         Directory.CreateDirectory(dataFolder);
         filePath = Path.Combine(dataFolder, "reservas-mapeamentos.json");
         CreateDefaultFileIfNeeded();
