@@ -47,7 +47,7 @@ END";
 
         try
         {
-            await reservasDbContext.Database.ExecuteSqlRawAsync(sql);
+            await oneNoteDbContext.Database.ExecuteSqlRawAsync(sql);
             await AddImportColumnIfMissingAsync("notebookId", "NVARCHAR(200) NOT NULL DEFAULT ''");
             await AddImportColumnIfMissingAsync("sectionId", "NVARCHAR(200) NOT NULL DEFAULT ''");
         }
@@ -69,13 +69,13 @@ BEGIN
     ALTER TABLE dbo.OneNotePageImport ADD {columnName} {columnDefinition};
 END";
 
-        await reservasDbContext.Database.ExecuteSqlRawAsync(sql);
+        await oneNoteDbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
     // Inserts a new page or updates the existing row for the same Microsoft page id.
     private async Task SavePageAsync(OneNotePageData page)
     {
-        DbConnection connection = reservasDbContext.Database.GetDbConnection();
+        DbConnection connection = oneNoteDbContext.Database.GetDbConnection();
         bool closeConnection = connection.State != ConnectionState.Open;
 
         if (closeConnection)

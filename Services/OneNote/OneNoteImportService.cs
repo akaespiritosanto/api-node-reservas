@@ -22,18 +22,18 @@ namespace api_node_reservas.Services;
 */
 public partial class OneNoteImportService
 {
-    private readonly ReservasDbContext reservasDbContext;
+    private readonly OneNoteDbContext oneNoteDbContext;
     private readonly MicrosoftGraphAuthService authService;
     private readonly OneNoteTokenStore tokenStore;
     private readonly HttpClient httpClient;
 
     public OneNoteImportService(
-        ReservasDbContext reservasDbContext,
+        OneNoteDbContext oneNoteDbContext,
         MicrosoftGraphAuthService authService,
         OneNoteTokenStore tokenStore,
         HttpClient httpClient)
     {
-        this.reservasDbContext = reservasDbContext;
+        this.oneNoteDbContext = oneNoteDbContext;
         this.authService = authService;
         this.tokenStore = tokenStore;
         this.httpClient = httpClient;

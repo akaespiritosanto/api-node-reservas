@@ -22,6 +22,7 @@ public class KnowledgeDbContext : DbContext
     public DbSet<Node> Nodes => Set<Node>();
     public DbSet<Context> Contexts => Set<Context>();
     public DbSet<Arc> Arcs => Set<Arc>();
+    public DbSet<OneNoteSyncState> OneNoteSyncStates => Set<OneNoteSyncState>();
 
     // Maps the C# models to the original SQL Server table and column names.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -69,5 +70,18 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<Arc>().Property(arc => arc.TypeId).HasColumnName("typeId");
         modelBuilder.Entity<Arc>().Property(arc => arc.Type).HasColumnName("type").HasColumnType("varchar(50)");
         modelBuilder.Entity<Arc>().Property(arc => arc.UpdateDate).HasColumnName("updateDate").HasColumnType("datetime");
+
+        modelBuilder.Entity<OneNoteSyncState>().ToTable("OneNoteSyncState");
+        modelBuilder.Entity<OneNoteSyncState>().HasKey(sync => sync.Id);
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.Id).HasColumnName("id");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.NodeId).HasColumnName("nodeId");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.OneNotePageId).HasColumnName("oneNotePageId").HasColumnType("nvarchar(200)");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.OneNoteSectionId).HasColumnName("oneNoteSectionId").HasColumnType("nvarchar(200)");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.LastSyncDate).HasColumnName("lastSyncDate");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.LastSyncedNodeUpdateDate).HasColumnName("lastSyncedNodeUpdateDate");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.LastSyncedOneNoteUpdateDate).HasColumnName("lastSyncedOneNoteUpdateDate");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.Status).HasColumnName("status").HasColumnType("nvarchar(50)");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.Message).HasColumnName("message").HasColumnType("nvarchar(1000)");
+        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.FileName).HasColumnName("fileName").HasColumnType("nvarchar(500)");
     }
 }

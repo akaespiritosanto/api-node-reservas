@@ -27,7 +27,7 @@ public class MicrosoftGraphAuthService
         string tenantId = GetEnvironmentValue("AZURE_TENANT_ID", "common");
         string clientId = GetRequiredEnvironmentValue("AZURE_CLIENT_ID");
         string redirectUri = GetRequiredEnvironmentValue("AZURE_REDIRECT_URI");
-        string scopes = "openid profile offline_access User.Read Notes.Read";
+        string scopes = "openid profile offline_access User.Read Notes.ReadWrite";
 
         string url =
             $"https://login.microsoftonline.com/{Uri.EscapeDataString(tenantId)}/oauth2/v2.0/authorize" +
@@ -57,7 +57,7 @@ public class MicrosoftGraphAuthService
             ["code"] = authorizationCode,
             ["redirect_uri"] = finalRedirectUri,
             ["grant_type"] = "authorization_code",
-            ["scope"] = "openid profile offline_access User.Read Notes.Read"
+            ["scope"] = "openid profile offline_access User.Read Notes.ReadWrite"
         };
 
         using FormUrlEncodedContent content = new FormUrlEncodedContent(formValues);

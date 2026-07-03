@@ -6,8 +6,8 @@
     "IdFieldName": "nodeId",
     "CreationDateFieldName": "",
     "UpdateDateFieldName": "updateDate",
-    "LastProcessedId": 1233,
-    "LastSuccessfulProcessingDate": "2026-06-30T16:14:24.8653263Z",
+    "LastProcessedId": 0,
+    "LastSuccessfulProcessingDate": null,
     "Mapping": {
       "Tabela": "cmsDocument",
       "Tipo": "contentType",

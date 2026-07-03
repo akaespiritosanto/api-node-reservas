@@ -21,6 +21,7 @@ public class Processamento_OneNoteController : ControllerBase
     private readonly OneNoteImportService importService;
     private readonly OneNoteTokenStore tokenStore;
     private readonly KnowledgeProcessingService processingService;
+    private readonly OneNoteSyncService syncService;
 
     // Receives the services used by the OneNote flow:
     // login, import, temporary token storage and final KB processing.
@@ -28,12 +29,14 @@ public class Processamento_OneNoteController : ControllerBase
         MicrosoftGraphAuthService authService,
         OneNoteImportService importService,
         OneNoteTokenStore tokenStore,
-        KnowledgeProcessingService processingService)
+        KnowledgeProcessingService processingService,
+        OneNoteSyncService syncService)
     {
         this.authService = authService;
         this.importService = importService;
         this.tokenStore = tokenStore;
         this.processingService = processingService;
+        this.syncService = syncService;
     }
 
     /// <summary>
@@ -163,6 +166,82 @@ public class Processamento_OneNoteController : ControllerBase
             return NotFound(new ErrorDto { Message = "OneNote mapping not found." });
         }
 
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Creates a OneNote section inside a notebook.
+    /// </summary>
+    [HttpPost("sections")]
+    [ProducesResponseType(typeof(OneNoteSectionResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // OneNote write step: creates a section. This does not move any notes.
+    public async Task<ActionResult<OneNoteSectionResultDto>> CreateSection(OneNoteCreateSectionRequestDto request)
+    {
+        OneNoteSectionResultDto result = await syncService.CreateSectionAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Renames an existing OneNote section.
+    /// </summary>
+    [HttpPatch("sections/rename")]
+    [ProducesResponseType(typeof(OneNoteSectionResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // OneNote write step: changes only the section name.
+    public async Task<ActionResult<OneNoteSectionResultDto>> RenameSection(OneNoteRenameSectionRequestDto request)
+    {
+        OneNoteSectionResultDto result = await syncService.RenameSectionAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Changes the title and body of a OneNote page.
+    /// </summary>
+    [HttpPatch("pages")]
+    [ProducesResponseType(typeof(OneNoteWriteResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // OneNote write step: changes the note itself, not its position.
+    public async Task<ActionResult<OneNoteWriteResultDto>> UpdatePage(OneNoteUpdatePageRequestDto request)
+    {
+        OneNoteWriteResultDto result = await syncService.UpdatePageAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Attaches a file to a OneNote page.
+    /// </summary>
+    [HttpPost("pages/attach-file")]
+    [ProducesResponseType(typeof(OneNoteWriteResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // OneNote write step: associates a file with the note.
+    public async Task<ActionResult<OneNoteWriteResultDto>> AttachFile(OneNoteAttachFileRequestDto request)
+    {
+        OneNoteWriteResultDto result = await syncService.AttachFileAsync(request);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Synchronizes one Node with its OneNote page.
+    /// </summary>
+    [HttpPost("sync/node/{nodeId:int}")]
+    [ProducesResponseType(typeof(OneNoteSyncResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // Sync step: compares OneNote update date, Node update date and last sync date.
+    public async Task<ActionResult<OneNoteSyncResultDto>> SynchronizeNode(int nodeId, OneNoteSyncRequestDto request)
+    {
+        OneNoteSyncResultDto result = await syncService.SynchronizeNodeAsync(nodeId, request);
         return Ok(result);
     }
 }
