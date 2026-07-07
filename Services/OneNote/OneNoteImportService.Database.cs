@@ -47,16 +47,29 @@ END";
 
         try
         {
-            await oneNoteDbContext.Database.ExecuteSqlRawAsync(sql);
+            await knowledgeDbContext.Database.ExecuteSqlRawAsync(sql);
             await AddImportColumnIfMissingAsync("notebookId", "NVARCHAR(200) NOT NULL DEFAULT ''");
             await AddImportColumnIfMissingAsync("sectionId", "NVARCHAR(200) NOT NULL DEFAULT ''");
         }
         catch (SqlException exception)
         {
             throw new InvalidOperationException(
-                $"Error preparing the OneNote import table. Check whether the source database connection works and whether the SQL user can alter OneNotePageImport. Detail: {exception.Message}",
+                CreateImportTableErrorMessage(exception),
                 exception);
         }
+    }
+
+    // Creates a clearer message for the most common setup problem:
+    // the knowledge database does not exist yet, or the SQL user does not
+    // have permission to open it.
+    private static string CreateImportTableErrorMessage(SqlException exception)
+    {
+        if (exception.Number == 4060 || exception.Message.Contains("Cannot open database", StringComparison.OrdinalIgnoreCase))
+        {
+            return $"Error preparing the OneNote import table. The knowledge database could not be opened. Check KB_DB_CONNECTION_STRING and make sure the SQL user can access that database. Detail: {exception.Message}";
+        }
+
+        return $"Error preparing the OneNote import table. Check whether KB_DB_CONNECTION_STRING works and whether the SQL user can alter OneNotePageImport in the knowledge database. Detail: {exception.Message}";
     }
 
     // Adds a new column when the staging table was created by an older version of the API.
@@ -69,13 +82,13 @@ BEGIN
     ALTER TABLE dbo.OneNotePageImport ADD {columnName} {columnDefinition};
 END";
 
-        await oneNoteDbContext.Database.ExecuteSqlRawAsync(sql);
+        await knowledgeDbContext.Database.ExecuteSqlRawAsync(sql);
     }
 
     // Inserts a new page or updates the existing row for the same Microsoft page id.
     private async Task SavePageAsync(OneNotePageData page)
     {
-        DbConnection connection = oneNoteDbContext.Database.GetDbConnection();
+        DbConnection connection = knowledgeDbContext.Database.GetDbConnection();
         bool closeConnection = connection.State != ConnectionState.Open;
 
         if (closeConnection)

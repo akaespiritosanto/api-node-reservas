@@ -152,7 +152,6 @@ public class OneNoteSyncService
         string accessToken = GetAccessToken(request.AccessToken);
         byte[] fileBytes = Convert.FromBase64String(request.Base64Content);
         await AttachFileToPageAsync(accessToken, request.PageId, request.FileName, request.ContentType, fileBytes);
-        await SaveAttachedFileNameAsync(request.PageId, request.FileName);
 
         return new OneNoteWriteResultDto
         {
@@ -176,60 +175,121 @@ public class OneNoteSyncService
         OneNoteSyncState state = await FindOrCreateStateAsync(node);
         string accessToken = GetAccessToken(request.AccessToken);
         OneNotePageInfo page = await ReadOneNotePageAsync(accessToken, state.OneNotePageId);
+        OneNotePageImport? importRow = await FindOneNoteImportRowAsync(page.PageId);
+        FillMissingBaselineDates(state, node, importRow);
 
         bool copiedFromOneNoteToNode = false;
         bool copiedFromNodeToOneNote = false;
         DateTime now = DateTime.UtcNow;
-        DateTime lastSyncDate = state.LastSyncDate ?? DateTime.MinValue;
-
-        if (state.LastSyncDate is null)
-        {
-            state.OneNoteSectionId = page.SectionId;
-            state.LastSyncDate = now;
-            state.LastSyncedNodeUpdateDate = node.UpdateDate;
-            state.LastSyncedOneNoteUpdateDate = page.LastModifiedDateTime;
-            state.Status = "Ok";
-            state.Message = "First synchronization only saved the baseline dates. Run synchronization again after changing OneNote or the Node.";
-            await knowledgeDbContext.SaveChangesAsync();
-            return CreateSyncResult(node, state, page, false, false);
-        }
-
-        bool oneNoteChanged = page.LastModifiedDateTime > lastSyncDate;
-        bool nodeChanged = node.UpdateDate > lastSyncDate;
+        bool nodeDateChanged = state.NodeUpdateDate.HasValue && node.UpdateDate > state.NodeUpdateDate.Value;
+        bool oneNoteDateChanged = state.OneNoteUpdateDate.HasValue && page.LastModifiedDateTime > state.OneNoteUpdateDate.Value;
+        bool nodeValuesChanged = IsNodeDifferentFromLastImport(node, importRow);
+        bool oneNoteValuesChanged = IsOneNoteDifferentFromLastImport(page, importRow);
+        bool nodeChanged = nodeDateChanged || nodeValuesChanged;
+        bool oneNoteChanged = oneNoteDateChanged || oneNoteValuesChanged;
 
         if (oneNoteChanged && nodeChanged)
         {
             state.Status = "SynchronizationFailure";
-            state.Message = "OneNote and the Node were both changed after the last synchronization. The user must decide which version wins.";
             await knowledgeDbContext.SaveChangesAsync();
-            return CreateSyncResult(node, state, page, false, false);
+            return CreateSyncResult(
+                node,
+                state,
+                page,
+                false,
+                false,
+                "OneNote and the Node were both changed after the last synchronization. The user must decide which version wins.");
         }
 
         if (oneNoteChanged)
         {
-            CopyOneNotePageToNode(page, node, now);
+            await CopyOneNotePageToDatabaseAsync(page, node, now);
             copiedFromOneNoteToNode = true;
         }
         else if (nodeChanged)
         {
             await UpdateOneNotePageFromNodeAsync(accessToken, node, page.PageId);
+            await RenameOneNoteSectionFromNodeAsync(accessToken, node, page);
             page = await ReadOneNotePageAsync(accessToken, state.OneNotePageId);
+            await SaveOneNoteImportRowAsync(page);
+            await RefreshOneNoteTreeRowsAsync(page, node, now);
             copiedFromNodeToOneNote = true;
         }
 
-        state.OneNoteSectionId = page.SectionId;
         state.LastSyncDate = now;
-        state.LastSyncedNodeUpdateDate = node.UpdateDate;
-        state.LastSyncedOneNoteUpdateDate = page.LastModifiedDateTime;
+        state.NodeUpdateDate = node.UpdateDate;
+        state.OneNoteUpdateDate = page.LastModifiedDateTime;
         state.Status = "Ok";
-        state.Message = copiedFromOneNoteToNode
-            ? "OneNote was updated and the Node was not. OneNote was copied to the database."
+        string message = copiedFromOneNoteToNode
+            ? "OneNote was updated and the Node was not. OneNote was copied to the database, including the staging row and tree rows."
             : copiedFromNodeToOneNote
                 ? "The Node was updated and OneNote was not. The database was copied to OneNote."
                 : "Nothing changed since the last synchronization.";
 
         await knowledgeDbContext.SaveChangesAsync();
-        return CreateSyncResult(node, state, page, copiedFromOneNoteToNode, copiedFromNodeToOneNote);
+        return CreateSyncResult(node, state, page, copiedFromOneNoteToNode, copiedFromNodeToOneNote, message);
+    }
+
+    // Synchronizes many OneNote Nodes. When limit is null, all OneNote Nodes
+    // are synchronized. When limit has a value, only that number is processed.
+    public async Task<OneNoteSyncManyResultDto> SynchronizeNodesAsync(OneNoteSyncRequestDto request, int? limit)
+    {
+        await CreateSyncTableIfMissingAsync();
+
+        IQueryable<Node> query = knowledgeDbContext.Nodes
+            .Where(node => node.Type == "OneNotePage" && node.ExternalId != "")
+            .OrderBy(node => node.Id);
+
+        if (limit.HasValue)
+        {
+            query = query.Take(limit.Value);
+        }
+
+        List<Node> nodes = await query.ToListAsync();
+        OneNoteSyncManyResultDto result = new OneNoteSyncManyResultDto
+        {
+            NodesFound = nodes.Count
+        };
+
+        foreach (Node node in nodes)
+        {
+            try
+            {
+                OneNoteSyncResultDto nodeResult = await SynchronizeNodeAsync(node.Id, request);
+                result.Results.Add(nodeResult);
+                result.NodesSynchronized++;
+
+                if (nodeResult.CopiedFromOneNoteToNode)
+                {
+                    result.CopiedFromOneNoteToNode++;
+                }
+
+                if (nodeResult.CopiedFromNodeToOneNote)
+                {
+                    result.CopiedFromNodeToOneNote++;
+                }
+
+                if (nodeResult.Status == "SynchronizationFailure")
+                {
+                    result.Conflicts++;
+                }
+            }
+            catch (Exception exception)
+            {
+                // One bad OneNote page should not stop the rest of the batch.
+                result.Errors++;
+                result.Results.Add(new OneNoteSyncResultDto
+                {
+                    NodeId = node.Id,
+                    OneNotePageId = node.ExternalId,
+                    Status = "Error",
+                    Message = exception.Message,
+                    NodeUpdateDate = node.UpdateDate
+                });
+            }
+        }
+
+        return result;
     }
 
     // Creates the synchronization table automatically for simple local setup.
@@ -243,16 +303,94 @@ BEGIN
         id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
         nodeId INT NOT NULL,
         oneNotePageId NVARCHAR(200) NOT NULL,
-        oneNoteSectionId NVARCHAR(200) NOT NULL,
         lastSyncDate DATETIME2 NULL,
-        lastSyncedNodeUpdateDate DATETIME2 NULL,
-        lastSyncedOneNoteUpdateDate DATETIME2 NULL,
-        status NVARCHAR(50) NOT NULL,
-        message NVARCHAR(1000) NOT NULL,
-        fileName NVARCHAR(500) NOT NULL
+        nodeUpdateDate DATETIME2 NULL,
+        oneNoteUpdateDate DATETIME2 NULL,
+        status NVARCHAR(50) NOT NULL
     );
 
     CREATE UNIQUE INDEX IX_OneNoteSyncState_NodeId ON dbo.OneNoteSyncState(nodeId);
+END
+
+IF OBJECT_ID('dbo.OneNoteSyncState', 'U') IS NOT NULL
+BEGIN
+    DECLARE @constraintName SYSNAME;
+    DECLARE @dropConstraintSql NVARCHAR(MAX);
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'nodeUpdateDate') IS NULL
+    BEGIN
+        ALTER TABLE dbo.OneNoteSyncState ADD nodeUpdateDate DATETIME2 NULL;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'oneNoteUpdateDate') IS NULL
+    BEGIN
+        ALTER TABLE dbo.OneNoteSyncState ADD oneNoteUpdateDate DATETIME2 NULL;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'lastSyncedNodeUpdateDate') IS NOT NULL
+    BEGIN
+        EXEC('UPDATE dbo.OneNoteSyncState SET nodeUpdateDate = lastSyncedNodeUpdateDate WHERE nodeUpdateDate IS NULL');
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN lastSyncedNodeUpdateDate;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'lastSyncedOneNoteUpdateDate') IS NOT NULL
+    BEGIN
+        EXEC('UPDATE dbo.OneNoteSyncState SET oneNoteUpdateDate = lastSyncedOneNoteUpdateDate WHERE oneNoteUpdateDate IS NULL');
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN lastSyncedOneNoteUpdateDate;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'oneNoteSectionId') IS NOT NULL
+    BEGIN
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN oneNoteSectionId;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'fileName') IS NOT NULL
+    BEGIN
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN fileName;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'message') IS NOT NULL
+    BEGIN
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN message;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'nodeDataHash') IS NOT NULL
+    BEGIN
+        SELECT @constraintName = defaultConstraints.name
+        FROM sys.default_constraints defaultConstraints
+        INNER JOIN sys.columns columns
+            ON columns.default_object_id = defaultConstraints.object_id
+        WHERE defaultConstraints.parent_object_id = OBJECT_ID('dbo.OneNoteSyncState')
+            AND columns.name = 'nodeDataHash';
+
+        IF @constraintName IS NOT NULL
+        BEGIN
+            SET @dropConstraintSql = N'ALTER TABLE dbo.OneNoteSyncState DROP CONSTRAINT ' + QUOTENAME(@constraintName);
+            EXEC(@dropConstraintSql);
+        END
+
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN nodeDataHash;
+    END
+
+    IF COL_LENGTH('dbo.OneNoteSyncState', 'oneNoteDataHash') IS NOT NULL
+    BEGIN
+        SET @constraintName = NULL;
+
+        SELECT @constraintName = defaultConstraints.name
+        FROM sys.default_constraints defaultConstraints
+        INNER JOIN sys.columns columns
+            ON columns.default_object_id = defaultConstraints.object_id
+        WHERE defaultConstraints.parent_object_id = OBJECT_ID('dbo.OneNoteSyncState')
+            AND columns.name = 'oneNoteDataHash';
+
+        IF @constraintName IS NOT NULL
+        BEGIN
+            SET @dropConstraintSql = N'ALTER TABLE dbo.OneNoteSyncState DROP CONSTRAINT ' + QUOTENAME(@constraintName);
+            EXEC(@dropConstraintSql);
+        END
+
+        ALTER TABLE dbo.OneNoteSyncState DROP COLUMN oneNoteDataHash;
+    END
 END";
 
         await knowledgeDbContext.Database.ExecuteSqlRawAsync(sql);
@@ -277,8 +415,7 @@ END";
         {
             NodeId = node.Id,
             OneNotePageId = node.ExternalId,
-            Status = "Ok",
-            Message = "Synchronization state created from Node.ExternalId."
+            Status = "Ok"
         };
 
         knowledgeDbContext.OneNoteSyncStates.Add(state);
@@ -287,11 +424,33 @@ END";
         return state;
     }
 
+    // Finds the staging row imported for this OneNote page.
+    private async Task<OneNotePageImport?> FindOneNoteImportRowAsync(string pageId)
+    {
+        return await knowledgeDbContext.OneNotePageImports
+            .FirstOrDefaultAsync(row => row.GraphPageId == pageId);
+    }
+
+    // Gives a new sync row useful baseline dates. This makes the first sync
+    // able to detect changes that happened after import/processing.
+    private static void FillMissingBaselineDates(OneNoteSyncState state, Node node, OneNotePageImport? importRow)
+    {
+        if (state.NodeUpdateDate is null)
+        {
+            state.NodeUpdateDate = node.UpdateDate;
+        }
+
+        if (state.OneNoteUpdateDate is null)
+        {
+            state.OneNoteUpdateDate = importRow?.LastModifiedDateTime ?? DateTime.MinValue;
+        }
+    }
+
     // Reads one OneNote page and its HTML content from Microsoft Graph.
     private async Task<OneNotePageInfo> ReadOneNotePageAsync(string accessToken, string pageId)
     {
         string safePageId = Uri.EscapeDataString(pageId);
-        string url = $"https://graph.microsoft.com/v1.0/me/onenote/pages/{safePageId}?$select=id,title,lastModifiedDateTime,links,parentSection&$expand=parentSection";
+        string url = $"https://graph.microsoft.com/v1.0/me/onenote/pages/{safePageId}?$select=id,title,createdDateTime,lastModifiedDateTime,links,parentSection,parentNotebook&$expand=parentSection,parentNotebook";
 
         using HttpRequestMessage graphRequest = new HttpRequestMessage(HttpMethod.Get, url);
         graphRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -315,10 +474,13 @@ END";
             Title = GetJsonString(root, "title"),
             HtmlContent = html,
             TextContent = ConvertHtmlToText(html),
+            CreatedDateTime = GetJsonDate(root, "createdDateTime"),
             LastModifiedDateTime = GetJsonDate(root, "lastModifiedDateTime"),
             WebUrl = ReadWebUrl(root),
             SectionId = ReadNestedString(root, "parentSection", "id"),
-            SectionName = ReadNestedString(root, "parentSection", "displayName")
+            SectionName = ReadNestedString(root, "parentSection", "displayName"),
+            NotebookId = ReadNestedString(root, "parentNotebook", "id"),
+            NotebookName = ReadNestedString(root, "parentNotebook", "displayName")
         };
     }
 
@@ -342,15 +504,165 @@ END";
         return responseText;
     }
 
-    // Copies the OneNote values into the database Node.
+    // Copies the OneNote values into the database tables used by OneNote data.
+    private async Task CopyOneNotePageToDatabaseAsync(OneNotePageInfo page, Node node, DateTime updateDate)
+    {
+        CopyOneNotePageToNode(page, node, updateDate);
+        await SaveOneNoteImportRowAsync(page);
+        await RefreshOneNoteTreeRowsAsync(page, node, updateDate);
+        await knowledgeDbContext.SaveChangesAsync();
+    }
+
+    // Copies the OneNote values into the main note Node.
     private static void CopyOneNotePageToNode(OneNotePageInfo page, Node node, DateTime updateDate)
     {
         node.Reference = LimitText(page.Title, 1000);
         node.Description = LimitText(page.TextContent, 8000);
+        node.Par1 = LimitText(page.NotebookName, 200);
         node.Par2 = LimitText(page.SectionName, 200);
         node.Link = LimitText(page.WebUrl, 500);
         node.ExternalId = LimitText(page.PageId, 200);
         node.UpdateDate = updateDate;
+    }
+
+    // Updates the OneNotePageImport row so the staging table matches OneNote too.
+    private async Task SaveOneNoteImportRowAsync(OneNotePageInfo page)
+    {
+        OneNotePageImport? importRow = await knowledgeDbContext.OneNotePageImports
+            .FirstOrDefaultAsync(row => row.GraphPageId == page.PageId);
+
+        if (importRow is null)
+        {
+            importRow = new OneNotePageImport
+            {
+                GraphPageId = page.PageId
+            };
+
+            knowledgeDbContext.OneNotePageImports.Add(importRow);
+        }
+
+        importRow.NotebookId = page.NotebookId;
+        importRow.NotebookName = page.NotebookName;
+        importRow.SectionId = page.SectionId;
+        importRow.SectionName = page.SectionName;
+        importRow.PageTitle = page.Title;
+        importRow.ContentText = page.TextContent;
+        importRow.ContentHtml = page.HtmlContent;
+        importRow.CreatedDateTime = page.CreatedDateTime;
+        importRow.LastModifiedDateTime = page.LastModifiedDateTime;
+        importRow.WebUrl = page.WebUrl;
+        importRow.ImportedAt = DateTime.UtcNow;
+    }
+
+    // Refreshes notebook/section Nodes and tree Context rows for this note.
+    private async Task RefreshOneNoteTreeRowsAsync(OneNotePageInfo page, Node noteNode, DateTime updateDate)
+    {
+        Node notebookNode = await FindOrCreateTreeNodeAsync(page.NotebookName, page.NotebookId, "notebook", 3001, updateDate);
+        Node sectionNode = await FindOrCreateTreeNodeAsync(page.SectionName, page.SectionId, "section", 3002, updateDate);
+        await knowledgeDbContext.SaveChangesAsync();
+
+        Context notebookRootContext = await FindOrCreateTreeContextAsync(notebookNode.Id, notebookNode.Reference, 0, updateDate);
+        await knowledgeDbContext.SaveChangesAsync();
+
+        Context sectionContext = await FindOrCreateTreeContextAsync(sectionNode.Id, sectionNode.Reference, notebookRootContext.Id, updateDate);
+        await knowledgeDbContext.SaveChangesAsync();
+
+        await RemoveOldNoteTreeContextsAsync(noteNode.Id, sectionContext.Id);
+        await FindOrCreateTreeContextAsync(noteNode.Id, noteNode.Reference, sectionContext.Id, updateDate);
+    }
+
+    // Removes old tree positions for the note before creating the current one.
+    // This keeps the note under the current OneNote section after a rename.
+    private async Task RemoveOldNoteTreeContextsAsync(int noteNodeId, int currentSectionContextId)
+    {
+        List<Context> oldTreeContexts = await knowledgeDbContext.Contexts
+            .Where(context => context.NodeId == noteNodeId
+                && context.DescriptionType == "tree"
+                && context.Location != currentSectionContextId)
+            .ToListAsync();
+
+        knowledgeDbContext.Contexts.RemoveRange(oldTreeContexts);
+    }
+
+    // Finds or creates the Node used in the OneNote tree, such as notebook or section.
+    private async Task<Node> FindOrCreateTreeNodeAsync(string reference, string externalId, string type, int typeId, DateTime updateDate)
+    {
+        string safeExternalId = LimitText(string.IsNullOrWhiteSpace(externalId) ? reference : externalId, 200);
+        string safeType = LimitText(type, 30);
+
+        Node? node = await knowledgeDbContext.Nodes.FirstOrDefaultAsync(existingNode =>
+            existingNode.TypeId == typeId
+            && existingNode.Type == safeType
+            && existingNode.ExternalId == safeExternalId);
+
+        if (node is null)
+        {
+            node = new Node
+            {
+                TypeId = typeId,
+                Type = safeType,
+                ExternalId = safeExternalId
+            };
+
+            knowledgeDbContext.Nodes.Add(node);
+        }
+
+        node.Reference = LimitText(reference, 1000);
+        node.Description = LimitText(reference, 8000);
+        node.Security = 0;
+        node.UpdateDate = updateDate;
+        node.UpdateUser = 0;
+
+        return node;
+    }
+
+    // Finds or creates one tree Context row and updates its description.
+    private async Task<Context> FindOrCreateTreeContextAsync(int nodeId, string description, int parentContextId, DateTime updateDate)
+    {
+        Context? context = await knowledgeDbContext.Contexts.FirstOrDefaultAsync(existingContext =>
+            existingContext.NodeId == nodeId
+            && existingContext.Location == parentContextId
+            && existingContext.DescriptionType == "tree");
+
+        if (context is null)
+        {
+            context = new Context
+            {
+                NodeId = nodeId,
+                Location = parentContextId,
+                DescriptionType = "tree"
+            };
+
+            knowledgeDbContext.Contexts.Add(context);
+        }
+
+        context.Description = LimitText(description, 8000);
+        context.UpdateDate = updateDate;
+
+        return context;
+    }
+
+    // If the database changed the note's section name, try to rename the
+    // OneNote section. This does not move the note to another section.
+    private async Task RenameOneNoteSectionFromNodeAsync(string accessToken, Node node, OneNotePageInfo page)
+    {
+        string sectionNameFromNode = node.Par2 ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(page.SectionId)
+            || string.IsNullOrWhiteSpace(sectionNameFromNode)
+            || SameText(sectionNameFromNode, page.SectionName))
+        {
+            return;
+        }
+
+        OneNoteRenameSectionRequestDto request = new OneNoteRenameSectionRequestDto
+        {
+            AccessToken = accessToken,
+            SectionId = page.SectionId,
+            DisplayName = sectionNameFromNode
+        };
+
+        await RenameSectionAsync(request);
     }
 
     // Copies the database Node into the OneNote page.
@@ -414,20 +726,6 @@ END";
         }
     }
 
-    // Stores the last file name attached through this API.
-    private async Task SaveAttachedFileNameAsync(string pageId, string fileName)
-    {
-        await CreateSyncTableIfMissingAsync();
-        OneNoteSyncState? state = await knowledgeDbContext.OneNoteSyncStates.FirstOrDefaultAsync(item => item.OneNotePageId == pageId);
-
-        if (state is not null)
-        {
-            state.FileName = fileName;
-            state.Message = "File associated with the OneNote page.";
-            await knowledgeDbContext.SaveChangesAsync();
-        }
-    }
-
     private string GetAccessToken(string requestAccessToken)
     {
         if (!string.IsNullOrWhiteSpace(requestAccessToken))
@@ -458,14 +756,15 @@ END";
         OneNoteSyncState state,
         OneNotePageInfo page,
         bool copiedFromOneNoteToNode,
-        bool copiedFromNodeToOneNote)
+        bool copiedFromNodeToOneNote,
+        string message)
     {
         return new OneNoteSyncResultDto
         {
             NodeId = node.Id,
             OneNotePageId = state.OneNotePageId,
             Status = state.Status,
-            Message = state.Message,
+            Message = message,
             CopiedFromOneNoteToNode = copiedFromOneNoteToNode,
             CopiedFromNodeToOneNote = copiedFromNodeToOneNote,
             LastSyncDate = state.LastSyncDate,
@@ -543,15 +842,57 @@ END";
         return text.Substring(0, maxLength);
     }
 
+    private static bool SameText(string? first, string? second)
+    {
+        return string.Equals(first ?? string.Empty, second ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    // Compares the current database Node with the last values saved in
+    // OneNotePageImport. This detects manual SQL edits even when updateDate
+    // was not changed by the person editing the database.
+    private static bool IsNodeDifferentFromLastImport(Node node, OneNotePageImport? importRow)
+    {
+        if (importRow is null)
+        {
+            return false;
+        }
+
+        return !SameText(node.Reference, importRow.PageTitle)
+            || !SameText(node.Description, importRow.ContentText)
+            || !SameText(node.Par1, importRow.NotebookName)
+            || !SameText(node.Par2, importRow.SectionName)
+            || !SameText(node.Link, importRow.WebUrl);
+    }
+
+    // Compares the current OneNote page with the last values saved in
+    // OneNotePageImport. This lets the sync detect OneNote edits by values too,
+    // not only by the lastModifiedDateTime returned by Microsoft Graph.
+    private static bool IsOneNoteDifferentFromLastImport(OneNotePageInfo page, OneNotePageImport? importRow)
+    {
+        if (importRow is null)
+        {
+            return false;
+        }
+
+        return !SameText(page.Title, importRow.PageTitle)
+            || !SameText(page.TextContent, importRow.ContentText)
+            || !SameText(page.NotebookName, importRow.NotebookName)
+            || !SameText(page.SectionName, importRow.SectionName)
+            || !SameText(page.WebUrl, importRow.WebUrl);
+    }
+
     private class OneNotePageInfo
     {
         public string PageId { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public string HtmlContent { get; set; } = string.Empty;
         public string TextContent { get; set; } = string.Empty;
+        public DateTime CreatedDateTime { get; set; }
         public DateTime LastModifiedDateTime { get; set; }
         public string WebUrl { get; set; } = string.Empty;
         public string SectionId { get; set; } = string.Empty;
         public string SectionName { get; set; } = string.Empty;
+        public string NotebookId { get; set; } = string.Empty;
+        public string NotebookName { get; set; } = string.Empty;
     }
 }

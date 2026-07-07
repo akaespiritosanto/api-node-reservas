@@ -22,7 +22,6 @@ namespace api_node_reservas.Services;
 public partial class KnowledgeProcessingService
 {
     private readonly ReservasDbContext reservasDbContext;
-    private readonly OneNoteDbContext oneNoteDbContext;
     private readonly KnowledgeDbContext knowledgeDbContext;
     private readonly MappingRepository mappingRepository;
     private readonly OneNoteMappingRepository oneNoteMappingRepository;
@@ -32,7 +31,6 @@ public partial class KnowledgeProcessingService
 
     public KnowledgeProcessingService(
         ReservasDbContext reservasDbContext,
-        OneNoteDbContext oneNoteDbContext,
         KnowledgeDbContext knowledgeDbContext,
         MappingRepository mappingRepository,
         OneNoteMappingRepository oneNoteMappingRepository,
@@ -41,7 +39,6 @@ public partial class KnowledgeProcessingService
         ILogger<KnowledgeProcessingService> logger)
     {
         this.reservasDbContext = reservasDbContext;
-        this.oneNoteDbContext = oneNoteDbContext;
         this.knowledgeDbContext = knowledgeDbContext;
         this.mappingRepository = mappingRepository;
         this.oneNoteMappingRepository = oneNoteMappingRepository;
@@ -138,8 +135,8 @@ public partial class KnowledgeProcessingService
 
         if (processingStateRepository is OneNoteMappingRepository)
         {
-            // OneNote imports are stored in their own staging database.
-            connection = oneNoteDbContext.Database.GetDbConnection();
+            // OneNote imports are stored in the knowledge database.
+            connection = knowledgeDbContext.Database.GetDbConnection();
         }
 
         List<Dictionary<string, object?>> rows = await ReadRowsToProcessAsync(mapping, limit, connection);

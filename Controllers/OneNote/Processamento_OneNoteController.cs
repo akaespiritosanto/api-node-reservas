@@ -244,4 +244,26 @@ public class Processamento_OneNoteController : ControllerBase
         OneNoteSyncResultDto result = await syncService.SynchronizeNodeAsync(nodeId, request);
         return Ok(result);
     }
+
+    /// <summary>
+    /// Synchronizes many OneNote Nodes with their OneNote pages.
+    /// </summary>
+    [HttpPost("sync/nodes")]
+    [ProducesResponseType(typeof(OneNoteSyncManyResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorDto), StatusCodes.Status500InternalServerError)]
+    // Batch sync step: if limit is empty, all OneNote Nodes are synchronized.
+    public async Task<ActionResult<OneNoteSyncManyResultDto>> SynchronizeNodes(
+        OneNoteSyncRequestDto request,
+        [FromQuery] int? limit = null)
+    {
+        if (limit.HasValue && limit.Value < 1)
+        {
+            return BadRequest(new ErrorDto { Message = "The limit must be greater than 0, or empty to synchronize all OneNote Nodes." });
+        }
+
+        OneNoteSyncManyResultDto result = await syncService.SynchronizeNodesAsync(request, limit);
+        return Ok(result);
+    }
 }

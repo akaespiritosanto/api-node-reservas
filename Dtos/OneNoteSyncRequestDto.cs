@@ -17,3 +17,14 @@ public class OneNoteSyncResultDto
     public DateTime? NodeUpdateDate { get; set; }
     public DateTime? OneNoteUpdateDate { get; set; }
 }
+
+public class OneNoteSyncManyResultDto
+{
+    public int NodesFound { get; set; }
+    public int NodesSynchronized { get; set; }
+    public int CopiedFromOneNoteToNode { get; set; }
+    public int CopiedFromNodeToOneNote { get; set; }
+    public int Conflicts { get; set; }
+    public int Errors { get; set; }
+    public List<OneNoteSyncResultDto> Results { get; set; } = new List<OneNoteSyncResultDto>();
+}

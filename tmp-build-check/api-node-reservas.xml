@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>api-node-reservas</name>
+    </assembly>
+    <members>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.GetAll">
+            <summary>
+            Lists all OneNote mapping configurations.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.GetById(System.Int32)">
+            <summary>
+            Gets one OneNote mapping configuration by id.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.GetByTableName(System.String)">
+            <summary>
+            Gets one OneNote mapping configuration by table name.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.Create(api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Creates a new OneNote mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.Update(System.Int32,api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Updates one OneNote mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_OneNoteController.Delete(System.Int32)">
+            <summary>
+            Deletes one OneNote mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.GetLoginUrl">
+            <summary>
+            Creates the Microsoft login URL used to request OneNote access.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.LoginCallback">
+            <summary>
+            Receives the Microsoft login result and stores the OneNote access token temporarily.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.GetTokenStatus">
+            <summary>
+            Checks whether the API has a temporary OneNote access token.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.Import(api_node_reservas.Dtos.OneNoteImportRequestDto)">
+            <summary>
+            Imports OneNote pages into the OneNote staging table.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.Process(System.Int32,System.Int32)">
+            <summary>
+            Processes imported OneNote pages into the knowledge database by mapping id.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.ProcessByTableName(System.String,System.Int32)">
+            <summary>
+            Processes imported OneNote pages into the knowledge database by table name.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.CreateSection(api_node_reservas.Dtos.OneNoteCreateSectionRequestDto)">
+            <summary>
+            Creates a OneNote section inside a notebook.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.RenameSection(api_node_reservas.Dtos.OneNoteRenameSectionRequestDto)">
+            <summary>
+            Renames an existing OneNote section.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.UpdatePage(api_node_reservas.Dtos.OneNoteUpdatePageRequestDto)">
+            <summary>
+            Changes the title and body of a OneNote page.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.AttachFile(api_node_reservas.Dtos.OneNoteAttachFileRequestDto)">
+            <summary>
+            Attaches a file to a OneNote page.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.SynchronizeNode(System.Int32,api_node_reservas.Dtos.OneNoteSyncRequestDto)">
+            <summary>
+            Synchronizes one Node with its OneNote page.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_OneNoteController.SynchronizeNodes(api_node_reservas.Dtos.OneNoteSyncRequestDto,System.Nullable{System.Int32})">
+            <summary>
+            Synchronizes many OneNote Nodes with their OneNote pages.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.GetAll">
+            <summary>
+            Lists all Reservas mapping configurations.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.GetById(System.Int32)">
+            <summary>
+            Gets one Reservas mapping configuration by id.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.GetByTableName(System.String)">
+            <summary>
+            Gets one Reservas mapping configuration by table name.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.Create(api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Creates a new Reservas mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.Update(System.Int32,api_node_reservas.Dtos.MappingConfigurationDto)">
+            <summary>
+            Updates one Reservas mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Mapeamentos_ReservasController.Delete(System.Int32)">
+            <summary>
+            Deletes one Reservas mapping configuration.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_ReservasController.Process(System.Int32,System.Int32)">
+            <summary>
+            Processes new or updated Reservas records into the knowledge database.
+            </summary>
+        </member>
+        <member name="M:api_node_reservas.Controllers.Processamento_ReservasController.ProcessByTableName(System.String,System.Int32)">
+            <summary>
+            Processes new or updated Reservas records into the knowledge database by table name.
+            </summary>
+        </member>
+        <member name="T:Program">
+            <summary>
+            Auto-generated public partial Program class for top-level statement apps.
+            </summary>
+        </member>
+    </members>
+</doc>

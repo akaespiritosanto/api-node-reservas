@@ -1,0 +1,49 @@
+[
+  {
+    "Id": 1,
+    "TableName": "OneNotePageImport",
+    "DetectionMethod": "CreationDate",
+    "IdFieldName": "id",
+    "CreationDateFieldName": "createdDateTime",
+    "UpdateDateFieldName": "lastModifiedDateTime",
+    "LastProcessedId": 105,
+    "LastSuccessfulProcessingDate": "2026-07-06T14:40:41.4920909Z",
+    "Mapping": {
+      "Tabela": "OneNotePageImport",
+      "Tipo": "OneNotePage",
+      "TipoE": "Note",
+      "Reference": "pageTitle",
+      "Descricao": "contentText",
+      "IdInformacao": "id",
+      "Par1": "notebookName",
+      "Par2": "sectionName",
+      "Par3": "",
+      "Par4": "",
+      "Par5": "",
+      "Par6": "",
+      "Par7": "",
+      "Link": "webUrl",
+      "ExternalId": "graphPageId",
+      "Security": "0",
+      "UpdateUser": "0",
+      "DescriptionType": "",
+      "ContextPar1": "",
+      "ContextDescriptionType": "",
+      "ParentType": "",
+      "Contexts": [],
+      "Parent": [
+        {
+          "fieldName": "notebookName",
+          "fieldId": "notebookId",
+          "parentType": "notebook",
+          "parentTypeId": 3001,
+          "groupBy": "sectionName",
+          "groupById": "sectionId",
+          "groupByType": "section",
+          "groupByTypeId": 3002
+        }
+      ],
+      "Relations": []
+    }
+  }
+]

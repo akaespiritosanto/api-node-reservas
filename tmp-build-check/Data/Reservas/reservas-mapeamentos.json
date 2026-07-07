@@ -1,0 +1,89 @@
+[
+  {
+    "Id": 1,
+    "TableName": "Reserva",
+    "DetectionMethod": "Id",
+    "IdFieldName": "id",
+    "CreationDateFieldName": "data_pedido",
+    "UpdateDateFieldName": "data_actualizacao",
+    "LastProcessedId": 0,
+    "LastSuccessfulProcessingDate": null,
+    "Mapping": {
+      "Tabela": "Reserva",
+      "Tipo": "Reserva",
+      "TipoE": "Reserva",
+      "Reference": "referencia",
+      "Descricao": "observacoes",
+      "IdInformacao": "id",
+      "Par1": "numero",
+      "Par2": "referencia",
+      "Par3": "nome_utilizador_confirmacao",
+      "Par4": "",
+      "Par5": "",
+      "Par6": "",
+      "Par7": "",
+      "Link": "",
+      "Security": "0",
+      "UpdateUser": "0",
+      "DescriptionType": "",
+      "ContextPar1": "",
+      "ContextDescriptionType": "",
+      "ParentType": "",
+      "Contexts": [
+        "estado",
+        "estado_pagamento",
+        "id_canal"
+      ],
+      "Parent": [],
+      "Relations": []
+    }
+  },
+  {
+    "Id": 2,
+    "TableName": "ProdutoReservado",
+    "DetectionMethod": "Id",
+    "IdFieldName": "id",
+    "CreationDateFieldName": "data_criacao",
+    "UpdateDateFieldName": "data_actualizacao",
+    "LastProcessedId": 0,
+    "LastSuccessfulProcessingDate": null,
+    "Mapping": {
+      "Tabela": "ProdutoReservado",
+      "Tipo": "ProdutoReservado",
+      "TipoE": "Produto",
+      "Reference": "referencia",
+      "Descricao": "nome_produto",
+      "IdInformacao": "id",
+      "Par1": "id_reserva",
+      "Par2": "id_produto",
+      "Par3": "referencia",
+      "Par4": "DataInicio",
+      "Par5": "DataFim",
+      "Par6": "",
+      "Par7": "",
+      "Link": "",
+      "Security": "0",
+      "UpdateUser": "0",
+      "DescriptionType": "",
+      "ContextPar1": "",
+      "ContextDescriptionType": "",
+      "ParentType": "Reserva",
+      "Contexts": [
+        "estado",
+        "quantidade",
+        "id_entidade"
+      ],
+      "Parent": [
+        "id_reserva"
+      ],
+      "Relations": [
+        {
+          "TypeId": "0",
+          "Type": "pertence_a_reserva",
+          "TargetId": "id_reserva",
+          "TargetType": "Reserva"
+        }
+      ]
+    }
+  }
+]

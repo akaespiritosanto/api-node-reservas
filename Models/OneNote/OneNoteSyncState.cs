@@ -14,11 +14,8 @@ public class OneNoteSyncState
     public int Id { get; set; }
     public int NodeId { get; set; }
     public string OneNotePageId { get; set; } = string.Empty;
-    public string OneNoteSectionId { get; set; } = string.Empty;
     public DateTime? LastSyncDate { get; set; }
-    public DateTime? LastSyncedNodeUpdateDate { get; set; }
-    public DateTime? LastSyncedOneNoteUpdateDate { get; set; }
+    public DateTime? NodeUpdateDate { get; set; }
+    public DateTime? OneNoteUpdateDate { get; set; }
     public string Status { get; set; } = "Ok";
-    public string Message { get; set; } = string.Empty;
-    public string FileName { get; set; } = string.Empty;
 }

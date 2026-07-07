@@ -11,6 +11,7 @@ namespace api_node_reservas.Swagger;
  2. Process Reservas data.
  3. Check or create OneNote mappings.
  4. Login, import and process OneNote data.
+ 5. Synchronize OneNote and Node data.
 ================================================================================
 */
 public static class SwaggerEndpointOrder
@@ -19,8 +20,9 @@ public static class SwaggerEndpointOrder
     public static string GetActionOrder(ApiDescription apiDescription)
     {
         string? controller = apiDescription.ActionDescriptor.RouteValues["controller"];
-        int group = GetGroupOrder(controller);
-        int endpoint = GetEndpointOrder(controller, apiDescription.RelativePath, apiDescription.HttpMethod);
+        string endpointPath = apiDescription.RelativePath ?? string.Empty;
+        int group = GetGroupOrder(controller, endpointPath);
+        int endpoint = GetEndpointOrder(controller, endpointPath, apiDescription.HttpMethod);
 
         return $"{group:000}_{endpoint:000}_{controller}";
     }
@@ -29,32 +31,48 @@ public static class SwaggerEndpointOrder
     public static string GetTag(ApiDescription apiDescription)
     {
         string? controller = apiDescription.ActionDescriptor.RouteValues["controller"];
+        string endpointPath = apiDescription.RelativePath ?? string.Empty;
 
         if (controller == "Mapeamentos_Reservas")
         {
-            return "01 Reservas - Mapeamentos";
+            return "01 - Reservas - Mapeamentos";
         }
 
         if (controller == "Processamento_Reservas")
         {
-            return "02 Reservas - Processamento";
+            return "02 - Reservas - Processamento";
         }
 
         if (controller == "Mapeamentos_OneNote")
         {
-            return "03 OneNote - Mapeamentos";
+            return "03 - OneNote - Mapeamentos";
+        }
+
+        if (controller == "Processamento_OneNote" && IsOneNoteSyncPath(endpointPath))
+        {
+            return "05 - OneNote - Sincronizacao";
         }
 
         if (controller == "Processamento_OneNote")
         {
-            return "04 OneNote - Login, Importacao e Processamento";
+            return "04 - OneNote - Processamento";
+        }
+
+        if (controller == "Mapeamentos_Umbraco")
+        {
+            return "06 - Umbraco - Mapeamentos";
+        }
+
+        if (controller == "Processamento_Umbraco")
+        {
+            return "07 - Umbraco - Processamento";
         }
 
         return controller ?? "Outros";
     }
 
     // Gives each Swagger section its place in the page.
-    private static int GetGroupOrder(string? controller)
+    private static int GetGroupOrder(string? controller, string path)
     {
         if (controller == "Mapeamentos_Reservas")
         {
@@ -73,7 +91,22 @@ public static class SwaggerEndpointOrder
 
         if (controller == "Processamento_OneNote")
         {
+            if (IsOneNoteSyncPath(path))
+            {
+                return 50;
+            }
+
             return 40;
+        }
+
+        if (controller == "Mapeamentos_Umbraco")
+        {
+            return 60;
+        }
+
+        if (controller == "Processamento_Umbraco")
+        {
+            return 70;
         }
 
         return 100;
@@ -158,6 +191,11 @@ public static class SwaggerEndpointOrder
     // OneNote should login first, then import, then process.
     private static int GetOneNoteProcessingOrder(string path)
     {
+        if (IsOneNoteSyncPath(path))
+        {
+            return GetOneNoteSyncOrder(path);
+        }
+
         if (path.EndsWith("login-url", StringComparison.OrdinalIgnoreCase))
         {
             return 10;
@@ -189,5 +227,27 @@ public static class SwaggerEndpointOrder
         }
 
         return 100;
+    }
+
+    // OneNote synchronization has its own Swagger section.
+    private static bool IsOneNoteSyncPath(string path)
+    {
+        return path.Contains("sync/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Sync one Node first, then the batch sync endpoint.
+    private static int GetOneNoteSyncOrder(string path)
+    {
+        if (path.Contains("sync/node/", StringComparison.OrdinalIgnoreCase))
+        {
+            return 10;
+        }
+
+        if (path.EndsWith("sync/nodes", StringComparison.OrdinalIgnoreCase))
+        {
+            return 20;
+        }
+
+        return 30;
     }
 }

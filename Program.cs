@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Data.SqlClient;
 
 /*
 ================================================================================
@@ -43,9 +42,6 @@ string oldConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_S
 string reservasConnectionString = Environment.GetEnvironmentVariable("RESERVAS_DB_CONNECTION_STRING")
     ?? oldConnectionString;
 
-string oneNoteConnectionString = Environment.GetEnvironmentVariable("ONENOTE_DB_CONNECTION_STRING")
-    ?? ChangeDatabaseName(reservasConnectionString, "dbOneNotePageImport");
-
 string umbracoConnectionString = Environment.GetEnvironmentVariable("UMBRACO_DB_CONNECTION_STRING")
     ?? oldConnectionString;
 
@@ -55,7 +51,6 @@ string knowledgeConnectionString = Environment.GetEnvironmentVariable("KB_DB_CON
 builder.Services.AddControllers();
 builder.Services.AddCors();
 builder.Services.AddDbContext<ReservasDbContext>(options => options.UseSqlServer(reservasConnectionString));
-builder.Services.AddDbContext<OneNoteDbContext>(options => options.UseSqlServer(oneNoteConnectionString));
 builder.Services.AddDbContext<KnowledgeDbContext>(options => options.UseSqlServer(knowledgeConnectionString));
 builder.Services.AddDbContext<UmbracoDbContext>(options => options.UseSqlServer(umbracoConnectionString));
 builder.Services.AddSingleton<MappingRepository>();
@@ -159,21 +154,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-// Changes only the database name in an existing SQL Server connection string.
-// This lets OneNote use the same server as Reservas, but the database
-// dbOneNotePageImport, when ONENOTE_DB_CONNECTION_STRING is not configured.
-static string ChangeDatabaseName(string connectionString, string databaseName)
-{
-    if (string.IsNullOrWhiteSpace(connectionString))
-    {
-        return connectionString;
-    }
-
-    SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connectionString)
-    {
-        InitialCatalog = databaseName
-    };
-
-    return builder.ConnectionString;
-}
