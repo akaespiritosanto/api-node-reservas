@@ -22,7 +22,6 @@ public class KnowledgeDbContext : DbContext
     public DbSet<Node> Nodes => Set<Node>();
     public DbSet<Context> Contexts => Set<Context>();
     public DbSet<Arc> Arcs => Set<Arc>();
-    public DbSet<OneNoteSyncState> OneNoteSyncStates => Set<OneNoteSyncState>();
     public DbSet<OneNotePageImport> OneNotePageImports => Set<OneNotePageImport>();
 
     // Maps the C# models to the original SQL Server table and column names.
@@ -48,6 +47,9 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<Node>().Property(node => node.UpdateDate).HasColumnName("updateDate").HasColumnType("datetime");
         modelBuilder.Entity<Node>().Property(node => node.UpdateUser).HasColumnName("updateUser");
         modelBuilder.Entity<Node>().Property(node => node.DescriptionType).HasColumnName("descriptionType").HasColumnType("varchar(10)");
+        modelBuilder.Entity<Node>().Property(node => node.LastModifiedDateTime).HasColumnName("LastModifiedDateTime").HasColumnType("datetime2");
+        modelBuilder.Entity<Node>().Property(node => node.ImportedAt).HasColumnName("ImportedAt").HasColumnType("datetime2");
+        modelBuilder.Entity<Node>().Property(node => node.SyncStatus).HasColumnName("syncStatus").HasColumnType("varchar(50)");
 
         modelBuilder.Entity<Context>().ToTable("Context");
         modelBuilder.Entity<Context>().HasKey(context => context.Id);
@@ -89,14 +91,5 @@ public class KnowledgeDbContext : DbContext
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.WebUrl).HasColumnName("webUrl").HasColumnType("nvarchar(1000)");
         modelBuilder.Entity<OneNotePageImport>().Property(page => page.ImportedAt).HasColumnName("importedAt");
 
-        modelBuilder.Entity<OneNoteSyncState>().ToTable("OneNoteSyncState");
-        modelBuilder.Entity<OneNoteSyncState>().HasKey(sync => sync.Id);
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.Id).HasColumnName("id");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.NodeId).HasColumnName("nodeId");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.OneNotePageId).HasColumnName("oneNotePageId").HasColumnType("nvarchar(200)");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.LastSyncDate).HasColumnName("lastSyncDate");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.NodeUpdateDate).HasColumnName("nodeUpdateDate");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.OneNoteUpdateDate).HasColumnName("oneNoteUpdateDate");
-        modelBuilder.Entity<OneNoteSyncState>().Property(sync => sync.Status).HasColumnName("status").HasColumnType("nvarchar(50)");
     }
 }

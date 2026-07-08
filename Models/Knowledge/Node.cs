@@ -20,4 +20,7 @@ public class Node
     public DateTime UpdateDate { get; set; }
     public int UpdateUser { get; set; }
     public string? DescriptionType { get; set; }
+    public DateTime? LastModifiedDateTime { get; set; }
+    public DateTime? ImportedAt { get; set; }
+    public string? SyncStatus { get; set; }
 }

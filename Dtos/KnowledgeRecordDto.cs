@@ -21,6 +21,8 @@ public class KnowledgeRecordDto
     public string Security { get; set; } = string.Empty;
     public string UpdateUser { get; set; } = string.Empty;
     public string DescriptionType { get; set; } = string.Empty;
+    public DateTime? LastModifiedDateTime { get; set; }
+    public DateTime? ImportedAt { get; set; }
     public string ContextPar1 { get; set; } = string.Empty;
     public string ContextDescriptionType { get; set; } = string.Empty;
     public string ParentType { get; set; } = string.Empty;

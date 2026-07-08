@@ -94,6 +94,8 @@ public partial class KnowledgeProcessingService
             Security = GetMappedValue(row, mapping.Mapping.Security),
             UpdateUser = GetMappedValue(row, mapping.Mapping.UpdateUser),
             DescriptionType = GetMappedValue(row, mapping.Mapping.DescriptionType),
+            LastModifiedDateTime = ToNullableDate(GetValue(row, "lastModifiedDateTime")),
+            ImportedAt = ToNullableDate(GetValue(row, "importedAt")),
             ContextPar1 = GetMappedValue(row, mapping.Mapping.ContextPar1),
             ContextDescriptionType = GetMappedValue(row, mapping.Mapping.ContextDescriptionType),
             ParentType = GetMappedValue(row, mapping.Mapping.ParentType),
@@ -157,6 +159,27 @@ public partial class KnowledgeProcessingService
         }
 
         return 0;
+    }
+
+    // Converts database date values to nullable DateTime for optional fields.
+    private static DateTime? ToNullableDate(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        if (value is DateTime date)
+        {
+            return date;
+        }
+
+        if (DateTime.TryParse(Convert.ToString(value), out DateTime parsedDate))
+        {
+            return parsedDate;
+        }
+
+        return null;
     }
 
     // Cuts text so it fits inside the SQL varchar column size.

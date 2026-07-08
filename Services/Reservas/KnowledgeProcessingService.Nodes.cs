@@ -67,6 +67,8 @@ public partial class KnowledgeProcessingService
         node.UpdateDate = updateDate;
         node.UpdateUser = ToInt(record.UpdateUser);
         node.DescriptionType = LimitNullableText(record.DescriptionType, 10);
+        node.LastModifiedDateTime = record.LastModifiedDateTime;
+        node.ImportedAt = record.ImportedAt;
     }
 
     private static string? LimitNullableText(string text, int maxLength)

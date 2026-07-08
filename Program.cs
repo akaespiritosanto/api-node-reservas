@@ -120,13 +120,38 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = scope.ServiceProvider.GetRequiredService<KnowledgeDbContext>();
-        var sql = @"IF EXISTS(SELECT * FROM sys.columns WHERE Name = N'parent' AND Object_ID = OBJECT_ID(N'dbo.[Context]'))
+        var nodeSql = @"
+IF COL_LENGTH('dbo.Node', 'LastModifiedDateTime') IS NULL
+BEGIN
+    ALTER TABLE dbo.Node ADD LastModifiedDateTime DATETIME2 NULL;
+END
+
+IF COL_LENGTH('dbo.Node', 'ImportedAt') IS NULL
+BEGIN
+    ALTER TABLE dbo.Node ADD ImportedAt DATETIME2 NULL;
+END";
+
+        db.Database.ExecuteSqlRaw(nodeSql);
+        logger.LogInformation("Node: created OneNote date columns if they were missing.");
+    }
+    catch (Exception ex)
+    {
+        // If anything fails here, we log and continue; the app should not be
+        // prevented from starting because of this one-time migration.
+        var logger2 = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger2.LogWarning(ex, "Node OneNote date column check skipped: {Message}", ex.Message);
+    }
+
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<KnowledgeDbContext>();
+        var contextSql = @"IF EXISTS(SELECT * FROM sys.columns WHERE Name = N'parent' AND Object_ID = OBJECT_ID(N'dbo.[Context]'))
 BEGIN
     UPDATE [Context] SET [location] = [parent] WHERE [parent] IS NOT NULL;
     ALTER TABLE [Context] DROP COLUMN [parent];
 END";
 
-        db.Database.ExecuteSqlRaw(sql);
+        db.Database.ExecuteSqlRaw(contextSql);
         logger.LogInformation("Context: copied parent -> location and dropped parent column if it existed.");
     }
     catch (Exception ex)

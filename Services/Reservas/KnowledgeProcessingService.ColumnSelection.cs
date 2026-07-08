@@ -22,6 +22,8 @@ public partial class KnowledgeProcessingService
         AddColumnIfExists(selectedColumns, tableColumns, mapping.IdFieldName);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.CreationDateFieldName);
         AddColumnIfExists(selectedColumns, tableColumns, mapping.UpdateDateFieldName);
+        AddColumnIfExists(selectedColumns, tableColumns, "lastModifiedDateTime");
+        AddColumnIfExists(selectedColumns, tableColumns, "importedAt");
 
         // These columns are the values that become Node fields.
         AddNodeColumnsIfTheyExist(selectedColumns, tableColumns, mapping);

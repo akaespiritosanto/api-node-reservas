@@ -1,4 +1,3 @@
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace api_node_reservas.Services;
@@ -14,10 +13,25 @@ public partial class KnowledgeProcessingService
     ============================================================================
     */
 
-    // Makes sure the Context table is prepared.
-    // The parent column has been replaced by the Location column, so it is no longer recreated.
-    private Task PrepareKnowledgeDatabaseAsync()
+    // Makes sure the Node table has the OneNote date fields used by sync.
+    private async Task PrepareKnowledgeDatabaseAsync()
     {
-        return Task.CompletedTask;
+        string sql = @"
+IF COL_LENGTH('dbo.Node', 'LastModifiedDateTime') IS NULL
+BEGIN
+    ALTER TABLE dbo.Node ADD LastModifiedDateTime DATETIME2 NULL;
+END
+
+IF COL_LENGTH('dbo.Node', 'ImportedAt') IS NULL
+BEGIN
+    ALTER TABLE dbo.Node ADD ImportedAt DATETIME2 NULL;
+END
+
+IF COL_LENGTH('dbo.Node', 'syncStatus') IS NULL
+BEGIN
+    ALTER TABLE dbo.Node ADD syncStatus VARCHAR(50) NULL;
+END";
+
+        await knowledgeDbContext.Database.ExecuteSqlRawAsync(sql);
     }
 }
