@@ -630,3 +630,92 @@ Run the API:
 ```bash
 dotnet run
 ```
+
+
+
+## OneNote — Sincronização
+
+Este secção descreve apenas os controllers e serviços envolvidos na sincronização entre um `Node` na base de dados e a respectiva página OneNote (não inclui importação nem processamento).
+
+Controller
+- Controller: `Controllers/OneNote/Processamento_OneNoteController.cs`  
+  Endpoints :
+  - `POST /api/onenote/sync/node/{nodeId:int}` — `SynchronizeNode(int nodeId, OneNoteSyncRequestDto)`  
+    Sincroniza um node com a sua página OneNote
+  - `POST /api/onenote/sync/nodes` — `SynchronizeNodes(OneNoteSyncRequestDto, int? limit)`  
+    Sincronização de vários nodes OneNote
+
+Serviços (OneNoteSyncService)
+- Serviço: OneNoteSyncService.Synchronization.cs
+  - `SynchronizeNodeAsync(int nodeId, OneNoteSyncRequestDto request)`  
+    Coordena a sincronização de um node: garante a existência das colunas de sync, lê a tabela Node, lê a página OneNote, decide qual lado mudou (OneNote ou DB), resolve conflitos (define o status de sincronização), copia os dados de um lado para o outro e atualiza dados necessários de sincronização (estado de sincronização, última data de modificação etc...)
+  - `SynchronizeNodesAsync(OneNoteSyncRequestDto request, int? limit)`  
+    Consulta quais nodes são do tipo `OneNotePage` e processa vários
+  - `TrySynchronizeOneNodeInBatchAsync(Node node, OneNoteSyncRequestDto request, OneNoteSyncManyResultDto result)`  
+    Tenta sincronizar um node no batch (lista criada no serviço `SynchronizeNodesAsync`) e regista erros sem parar de percorrer os vários nodes
+  - `WasNodeChangedAfterLastSync(Node node)` / `WasOneNoteChangedAfterLastSync(Node node, OneNotePageInfo page, OneNotePageImport? importRow)`  
+    Verifica as alterações baseadas nas datas (DB e OneNote)
+
+- Serviço: OneNoteSyncService.Database.cs
+  - `EnsureNodeSyncColumnsAsync()`  
+    Adiciona colunas `LastModifiedDateTime`, `ImportedAt`, `syncStatus` à tabela `Node` se não existirem
+  - `FindOneNoteImportRowAsync(string pageId)`  
+    Verifica na tabela OneNotePageImport se já existe um registo com GraphPageId igual ao id da página OneNote
+  - `FillMissingNodeSyncDates(Node node, OneNotePageImport? importRow)`  
+    Inicializa datas no `Node` para permitir comparações na primeira sincronização
+  - `CopyOneNotePageToDatabaseAsync(OneNotePageInfo page, Node node, DateTime updateDate)`  
+    Copia valores da página OneNote para a tabela Node, grava a linha de staging e actualiza a árvore (notebook/section)
+  - `CopyOneNotePageToNode(OneNotePageInfo page, Node node, DateTime updateDate)`  
+    Preenche `Reference`, `Description`, `Par1/Par2`, `Link`, `ExternalId` e `UpdateDate` da tabela `Node`
+  - `SaveOneNoteImportRowAsync(OneNotePageInfo page)` / `SaveOneNoteImportRowFromNodeAsync(Node node, OneNotePageInfo page, DateTime importedAt)`  
+    Actualizam a linha de staging com a versão de OneNote ou com a versão do Node (BD)
+  - `RefreshOneNoteTreeRowsAsync(OneNotePageInfo page, Node noteNode, DateTime updateDate)`  
+    Garante existência de nós de notebook/secção e contexts de árvore; remove posições antigas da tabela `Node`
+
+- Serviço: OneNoteSyncService.Graph.cs
+  - `ReadOneNotePageAsync(string accessToken, string pageId)`  
+    Lê metadados da página (id, titulo etc...) via Microsoft Graph, obtém HTML e converte para `OneNotePageInfo` (armazena os dados lidos do Microsoft Graph)
+  - `ReadPageContentAsync(string accessToken, string pageId)`  
+    GET do conteúdo HTML da página
+  - `ReadOneNotePageAfterNodeUpdateAsync(string accessToken, Node node, OneNotePageInfo oldPage)`  
+    Após enviar alterações para OneNote, re-lê a página várias vezes (até 5) para confirmar que as mudanças são visíveis; lança erro se não
+
+- Serviço: OneNoteSyncService.Pages.cs
+  - `UpdatePageAsync(OneNoteUpdatePageRequestDto request)`  
+    Valida e envia alteração de título/body para OneNote (usa `UpdateOneNotePageFromValuesAsync`)
+  - `UpdateOneNotePageFromValuesAsync(string accessToken, string pageId, string title, string htmlContent)`  
+    Envia PATCH JSON para substituir `title` e `body` da página
+  - `UpdateOneNotePageFromNodeAsync(string accessToken, Node node, string pageId)`  
+    Cria HTML a partir da tabela `Node` e actualiza a página OneNote
+  - `AttachFileAsync(OneNoteAttachFileRequestDto request)`  
+    Converte Base64 e anexa ficheiro à página (usa `AttachFileToPageAsync`)
+  - `AttachFileToPageAsync(string accessToken, string pageId, string fileName, string contentType, byte[] fileBytes)`  
+    Envia um PATCH que inclui um campo JSON com as instruções e o ficheiro a anexar para o Microsoft Graph
+  - `RenameOneNoteSectionFromNodeAsync(string accessToken, Node node, OneNotePageInfo page)`  
+    Se na tabela Node nome da secção foi alterado, renomeia a secção no OneNote (não move a página)
+
+- Serviço: OneNoteSyncService.Sections.cs
+  - `CreateSectionAsync(OneNoteCreateSectionRequestDto request)` — cria uma secção num notebook via Graph
+  - `RenameSectionAsync(OneNoteRenameSectionRequestDto request)` — renomeia uma secção via Graph
+
+- Serviço: OneNoteSyncService.Helpers.cs
+  - `GetAccessToken(string requestAccessToken)` — usa token do pedido ou token guardado no `OneNoteTokenStore`
+  - `CreateJsonRequest(...)`, `ReadWebUrl(...)`, `GetJsonString(...)`, `GetJsonDate(...)` — utilitários para chamadas Graph e parsing JSON
+  - `ConvertHtmlToText(string html)` / `GetHtmlBody(string html)` — limpam HTML para comparação em formato de texto
+  - `CreateHtmlFromNodeDescription(Node node)` — cria HTML simples a partir da descrição na tabela Node
+  - `OneNotePageMatchesNode(OneNotePageInfo page, Node node)` — Compara o título e o texto da página, depois de os limpar/formatar (remover tags HTML etc.. e tornar numa string), para verificar se são iguais
+
+
+## OneNote - workflow algoritimo de sincronização
+
+1 - Lê o Node e exige que tenha o id da página OneNote no campo ExternalId. Se não tiver aborta para aquele suposto node.
+2 - Lê a página OneNote (metadados + HTML) usando o token.
+3 - Carrega ou cria a linha da tabela de staging correspondente (OneNotePageImport).
+4 - Inicializa datas que faltam no Node para comparações, servem apenas como referência inicial na primeira sincronização.
+5 - Compara datas e conteúdo para decidir quem mudou (Node / OneNote).
+6 - Se ambos mudaram => marca conflito e aborta (não substitui em nenhum dos lados (OneNote / Node) ).
+7 - Se só OneNote mudou => copia título, texto, notebook/section e link para o Node, atualizar tabela de staging e árvore (tabela Node e Context).
+8 - Se só Node mudou => gera o HTML do Node, envia a atualização ao OneNote, re-lê para confirmar que a alteração foi aplicada (compara o que está na BD com o HTML criado), atualiza a tabela de staging e árvore.
+9- Atualiza metadados do Node (LastModifiedDateTime, ImportedAt, SyncStatus) e grava o resultado.
+
+
