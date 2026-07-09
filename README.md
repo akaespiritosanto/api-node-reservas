@@ -678,7 +678,7 @@ Serviços (OneNoteSyncService)
   - `ReadPageContentAsync(string accessToken, string pageId)`  
     GET do conteúdo HTML da página
   - `ReadOneNotePageAfterNodeUpdateAsync(string accessToken, Node node, OneNotePageInfo oldPage)`  
-    Após enviar alterações para OneNote, re-lê a página várias vezes (até 5) para confirmar que as mudanças são visíveis; lança erro se não
+    Após enviar alterações para OneNote, relê a página várias vezes (até 5) para confirmar que as mudanças são visíveis; lança erro se não
 
 - Serviço: OneNoteSyncService.Pages.cs
   - `UpdatePageAsync(OneNoteUpdatePageRequestDto request)`  
@@ -706,16 +706,16 @@ Serviços (OneNoteSyncService)
   - `OneNotePageMatchesNode(OneNotePageInfo page, Node node)` — Compara o título e o texto da página, depois de os limpar/formatar (remover tags HTML etc.. e tornar numa string), para verificar se são iguais
 
 
+
 ## OneNote - workflow algoritimo de sincronização
 
-1 - Lê o Node e exige que tenha o id da página OneNote no campo ExternalId. Se não tiver aborta para aquele suposto node.
-2 - Lê a página OneNote (metadados + HTML) usando o token.
-3 - Carrega ou cria a linha da tabela de staging correspondente (OneNotePageImport).
-4 - Inicializa datas que faltam no Node para comparações, servem apenas como referência inicial na primeira sincronização.
-5 - Compara datas e conteúdo para decidir quem mudou (Node / OneNote).
-6 - Se ambos mudaram => marca conflito e aborta (não substitui em nenhum dos lados (OneNote / Node) ).
-7 - Se só OneNote mudou => copia título, texto, notebook/section e link para o Node, atualizar tabela de staging e árvore (tabela Node e Context).
-8 - Se só Node mudou => gera o HTML do Node, envia a atualização ao OneNote, re-lê para confirmar que a alteração foi aplicada (compara o que está na BD com o HTML criado), atualiza a tabela de staging e árvore.
-9- Atualiza metadados do Node (LastModifiedDateTime, ImportedAt, SyncStatus) e grava o resultado.
-
+1. Lê o Node e exige que tenha o id da página OneNote no campo ExternalId. Se não tiver aborta para aquele suposto node.
+2. Lê a página OneNote (metadados + HTML) usando o token.
+3. Carrega ou cria a linha da tabela de staging correspondente (OneNotePageImport).
+4. Inicializa datas que faltam no Node para comparações, servem apenas como referência inicial na primeira sincronização.
+5. Compara datas e conteúdo para decidir quem mudou (Node / OneNote).
+6. Se ambos mudaram → marca conflito e aborta (não substitui em nenhum dos lados).
+7. Se só OneNote mudou → copia título, texto, notebook/section e link para o Node, atualiza a tabela de staging e a árvore (Node e Context).
+8. Se só Node mudou → gera o HTML do Node, envia a atualização ao OneNote, relê para confirmar que a alteração foi aplicada, e atualiza a tabela de staging e a árvore.
+9. Atualiza metadados do Node (LastModifiedDateTime, ImportedAt, SyncStatus) e grava o resultado.
 
