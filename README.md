@@ -664,11 +664,11 @@ Serviços (OneNoteSyncService)
   - `FillMissingNodeSyncDates(Node node, OneNotePageImport? importRow)`  
     Inicializa datas no `Node` para permitir comparações na primeira sincronização
   - `CopyOneNotePageToDatabaseAsync(OneNotePageInfo page, Node node, DateTime updateDate)`  
-    Copia valores da página OneNote para a tabela Node, grava a linha de staging e actualiza a árvore (notebook/section)
+    Copia valores da página OneNote para a tabela Node, grava a linha de staging e atualiza a árvore (notebook/section)
   - `CopyOneNotePageToNode(OneNotePageInfo page, Node node, DateTime updateDate)`  
     Preenche `Reference`, `Description`, `Par1/Par2`, `Link`, `ExternalId` e `UpdateDate` da tabela `Node`
   - `SaveOneNoteImportRowAsync(OneNotePageInfo page)` / `SaveOneNoteImportRowFromNodeAsync(Node node, OneNotePageInfo page, DateTime importedAt)`  
-    Actualizam a linha de staging com a versão de OneNote ou com a versão do Node (BD)
+    Atualizam a linha de staging com a versão de OneNote ou com a versão do Node (BD)
   - `RefreshOneNoteTreeRowsAsync(OneNotePageInfo page, Node noteNode, DateTime updateDate)`  
     Garante existência de nós de notebook/secção e contexts de árvore; remove posições antigas da tabela `Node`
 
@@ -678,7 +678,7 @@ Serviços (OneNoteSyncService)
   - `ReadPageContentAsync(string accessToken, string pageId)`  
     GET do conteúdo HTML da página
   - `ReadOneNotePageAfterNodeUpdateAsync(string accessToken, Node node, OneNotePageInfo oldPage)`  
-    Após enviar alterações para OneNote, relê a página várias vezes (até 5) para confirmar que as mudanças são visíveis; lança erro se não
+    Após enviar alterações para OneNote, relê a página várias vezes (até 5) para confirmar que as mudanças são visíveis. Lança erro se não
 
 - Serviço: OneNoteSyncService.Pages.cs
   - `UpdatePageAsync(OneNoteUpdatePageRequestDto request)`  
@@ -686,7 +686,7 @@ Serviços (OneNoteSyncService)
   - `UpdateOneNotePageFromValuesAsync(string accessToken, string pageId, string title, string htmlContent)`  
     Envia PATCH JSON para substituir `title` e `body` da página
   - `UpdateOneNotePageFromNodeAsync(string accessToken, Node node, string pageId)`  
-    Cria HTML a partir da tabela `Node` e actualiza a página OneNote
+    Cria HTML a partir da tabela `Node` e atualiza a página OneNote
   - `AttachFileAsync(OneNoteAttachFileRequestDto request)`  
     Converte Base64 e anexa ficheiro à página (usa `AttachFileToPageAsync`)
   - `AttachFileToPageAsync(string accessToken, string pageId, string fileName, string contentType, byte[] fileBytes)`  
@@ -699,10 +699,10 @@ Serviços (OneNoteSyncService)
   - `RenameSectionAsync(OneNoteRenameSectionRequestDto request)` — renomeia uma secção via Graph
 
 - Serviço: OneNoteSyncService.Helpers.cs
-  - `GetAccessToken(string requestAccessToken)` — usa token do pedido ou token guardado no `OneNoteTokenStore`
-  - `CreateJsonRequest(...)`, `ReadWebUrl(...)`, `GetJsonString(...)`, `GetJsonDate(...)` — utilitários para chamadas Graph e parsing JSON
-  - `ConvertHtmlToText(string html)` / `GetHtmlBody(string html)` — limpam HTML para comparação em formato de texto
-  - `CreateHtmlFromNodeDescription(Node node)` — cria HTML simples a partir da descrição na tabela Node
+  - `GetAccessToken(string requestAccessToken)` — Usa token do pedido ou token guardado no `OneNoteTokenStore`
+  - `CreateJsonRequest(...)`, `ReadWebUrl(...)`, `GetJsonString(...)`, `GetJsonDate(...)` — Utilitários para chamadas Graph e parsing JSON
+  - `ConvertHtmlToText(string html)` / `GetHtmlBody(string html)` — Limpam HTML para comparação em formato de texto
+  - `CreateHtmlFromNodeDescription(Node node)` — Cria HTML simples a partir da descrição na tabela Node
   - `OneNotePageMatchesNode(OneNotePageInfo page, Node node)` — Compara o título e o texto da página, depois de os limpar/formatar (remover tags HTML etc.. e tornar numa string), para verificar se são iguais
 
 
